@@ -1,4 +1,5 @@
 using System.IO;
+using Battuta.Core.Input;
 using Battuta.Windows.Settings;
 
 namespace Battuta.Windows.Tests.Platform.Settings;
@@ -18,6 +19,7 @@ public sealed class JsonAppSettingsStoreTests
         Assert.Equal(0.42, settings.Volume, precision: 6);
         Assert.Equal(0.273, settings.PointerVolume, precision: 6);
         Assert.True(settings.PlaysReleaseSound);
+        Assert.False(settings.PlaysKeyRepeatSound);
         Assert.True(settings.UsesPitchVariation);
         Assert.False(settings.IsPointerSoundEnabled);
         Assert.False(settings.IsTypingStatsEnabled);
@@ -44,6 +46,7 @@ public sealed class JsonAppSettingsStoreTests
         Assert.Equal(0.8, settings.Volume, precision: 6);
         Assert.Equal(0.52, settings.PointerVolume, precision: 6);
         Assert.Equal("mxbrown", settings.SelectedProfileId);
+        Assert.False(settings.PlaysKeyRepeatSound);
     }
 
     [Fact]
@@ -69,6 +72,36 @@ public sealed class JsonAppSettingsStoreTests
         Assert.Equal("holypanda", loaded.SelectedProfileId);
         Assert.Equal("glass", loaded.SelectedPointerProfileId);
         Assert.Equal(AutomaticUpdateCheckPreference.Enabled, loaded.AutomaticUpdateCheckPreference);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task KeyRepeatPreferencePersists(bool enabled)
+    {
+        using var directory = new TestDirectory();
+        var path = Path.Combine(directory.Path, "settings.json");
+        using var store = new JsonAppSettingsStore(path);
+        await store.SaveAsync(new AppSettingsSnapshot { PlaysKeyRepeatSound = !enabled });
+        await store.SaveAsync(new AppSettingsSnapshot { PlaysKeyRepeatSound = enabled });
+        Assert.Equal(enabled, (await store.LoadAsync()).PlaysKeyRepeatSound);
+    }
+
+    [Fact]
+    public void RepeatPlaybackHonorsPauseAndReleasePreferences()
+    {
+        var settings = new AppSettingsSnapshot();
+        Assert.True(settings.ShouldPlayKeyboardSound(KeyPhase.Press, isRepeat: false));
+        Assert.False(settings.ShouldPlayKeyboardSound(KeyPhase.Press, isRepeat: true));
+        settings = settings with { PlaysKeyRepeatSound = true, PlaysReleaseSound = false };
+        Assert.True(settings.ShouldPlayKeyboardSound(KeyPhase.Press, isRepeat: true));
+        Assert.False(settings.ShouldPlayKeyboardSound(KeyPhase.Release, isRepeat: false));
+        settings = settings with { PlaysReleaseSound = true };
+        Assert.True(settings.ShouldPlayKeyboardSound(KeyPhase.Release, isRepeat: false));
+        settings = settings with { IsEnabled = false };
+        Assert.False(settings.ShouldPlayKeyboardSound(KeyPhase.Press, isRepeat: false));
+        Assert.False(settings.ShouldPlayKeyboardSound(KeyPhase.Press, isRepeat: true));
+        Assert.False(settings.ShouldPlayKeyboardSound(KeyPhase.Release, isRepeat: false));
     }
 
     [Fact]

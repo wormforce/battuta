@@ -80,6 +80,8 @@ public partial class TrayFlyoutWindow
         KeyboardVolumeSlider.ValueChanged += RuntimeControlChanged;
         KeyboardReleaseToggle.Checked += RuntimeControlChanged;
         KeyboardReleaseToggle.Unchecked += RuntimeControlChanged;
+        KeyboardRepeatToggle.Checked += RuntimeControlChanged;
+        KeyboardRepeatToggle.Unchecked += RuntimeControlChanged;
         VariationToggle.Checked += RuntimeControlChanged;
         VariationToggle.Unchecked += RuntimeControlChanged;
         PointerToggle.Checked += RuntimeControlChanged;
@@ -121,6 +123,7 @@ public partial class TrayFlyoutWindow
             IsEnabled = KeyboardToggle.IsChecked == true,
             Volume = KeyboardVolumeSlider.Value / 100d,
             PlaysReleaseSound = KeyboardReleaseToggle.IsChecked == true,
+            PlaysKeyRepeatSound = KeyboardRepeatToggle.IsChecked == true,
             UsesPitchVariation = VariationToggle.IsChecked == true,
             IsPointerSoundEnabled = PointerToggle.IsChecked == true,
             PointerVolume = PointerVolumeSlider.Value / 100d,
@@ -504,9 +507,11 @@ public partial class TrayFlyoutWindow
             PreviewButton.IsEnabled = settings.IsEnabled;
             KeyboardVolumeSlider.IsEnabled = settings.IsEnabled;
             KeyboardReleaseToggle.IsEnabled = settings.IsEnabled;
+            KeyboardRepeatToggle.IsEnabled = settings.IsEnabled;
             KeyboardVolumeSlider.Value = settings.Volume * 100d;
             KeyboardVolumeText.Text = $"{Math.Round(settings.Volume * 100d):0}%";
             KeyboardReleaseToggle.IsChecked = settings.PlaysReleaseSound;
+            KeyboardRepeatToggle.IsChecked = settings.PlaysKeyRepeatSound;
             VariationToggle.IsChecked = settings.UsesPitchVariation;
             PointerToggle.IsChecked = settings.IsPointerSoundEnabled;
             if (!PointerProfileCombo.IsDropDownOpen)

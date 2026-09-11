@@ -191,6 +191,7 @@ public sealed class JsonAppSettingsStore : IAppSettingsStore, IDisposable
         public string? SelectedProfileId { get; init; }
         public double? Volume { get; init; }
         public bool? PlaysReleaseSound { get; init; }
+        public bool? PlaysKeyRepeatSound { get; init; }
         public bool? UsesPitchVariation { get; init; }
         public bool? IsPointerSoundEnabled { get; init; }
         public string? SelectedPointerProfileId { get; init; }
@@ -210,6 +211,7 @@ public sealed class JsonAppSettingsStore : IAppSettingsStore, IDisposable
                 SelectedProfileId = SelectedProfileId ?? "holypanda",
                 Volume = keyboardVolume,
                 PlaysReleaseSound = PlaysReleaseSound ?? true,
+                PlaysKeyRepeatSound = PlaysKeyRepeatSound ?? false,
                 UsesPitchVariation = UsesPitchVariation ?? true,
                 IsPointerSoundEnabled = IsPointerSoundEnabled ?? false,
                 SelectedPointerProfileId = SelectedPointerProfileId ?? "classic",
@@ -232,6 +234,7 @@ public sealed class JsonAppSettingsStore : IAppSettingsStore, IDisposable
                 SelectedProfileId = value.SelectedProfileId,
                 Volume = value.Volume,
                 PlaysReleaseSound = value.PlaysReleaseSound,
+                PlaysKeyRepeatSound = value.PlaysKeyRepeatSound,
                 UsesPitchVariation = value.UsesPitchVariation,
                 IsPointerSoundEnabled = value.IsPointerSoundEnabled,
                 SelectedPointerProfileId = value.SelectedPointerProfileId,

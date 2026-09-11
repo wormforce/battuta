@@ -48,6 +48,7 @@ final class AppSettings: ObservableObject {
         static let volume = "volume"
         static let keyboardVolumeCurveVersion = "keyboardVolumeCurveVersion"
         static let releaseSound = "releaseSound"
+        static let keyRepeatSound = "keyRepeatSound"
         static let pitchVariation = "pitchVariation"
         static let pointerSoundEnabled = "pointerSoundEnabled"
         static let selectedPointerProfile = "selectedPointerProfile"
@@ -78,6 +79,10 @@ final class AppSettings: ObservableObject {
 
     @Published var playsReleaseSound: Bool {
         didSet { defaults.set(playsReleaseSound, forKey: Key.releaseSound) }
+    }
+
+    @Published var playsKeyRepeatSound: Bool {
+        didSet { defaults.set(playsKeyRepeatSound, forKey: Key.keyRepeatSound) }
     }
 
     @Published var usesPitchVariation: Bool {
@@ -132,6 +137,14 @@ final class AppSettings: ObservableObject {
         KeyboardVolumeCurve.playbackGain(for: volume)
     }
 
+    func shouldPlaySound(for event: KeyboardEvent) -> Bool {
+        guard isEnabled else { return false }
+        switch event.kind {
+        case .keyDown: return !event.isRepeat || playsKeyRepeatSound
+        case .keyUp: return playsReleaseSound
+        }
+    }
+
     func refreshSystemLanguageIfNeeded() {
         guard languagePreference == .system else { return }
         if L10n.refreshSystemLocalizationIfNeeded() {
@@ -157,6 +170,7 @@ final class AppSettings: ObservableObject {
         }
         volume = resolvedKeyboardVolume
         playsReleaseSound = defaults.object(forKey: Key.releaseSound) as? Bool ?? true
+        playsKeyRepeatSound = defaults.object(forKey: Key.keyRepeatSound) as? Bool ?? false
         usesPitchVariation = defaults.object(forKey: Key.pitchVariation) as? Bool ?? true
         isPointerSoundEnabled = defaults.object(forKey: Key.pointerSoundEnabled) as? Bool ?? false
         let storedPointerProfileID = defaults.string(forKey: Key.selectedPointerProfile)

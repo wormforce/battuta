@@ -627,3 +627,6 @@
 "本期为最近 7 天（%@）；上期为紧邻的前 7 天（%@）。" = "Current: the last 7 days (%1$@); previous: the immediately preceding 7 days (%2$@).";
 "%@ %@ · 最近 7 天（%@）：%@ 个字符" = "%1$@ %2$@ · Last 7 days (%3$@): %4$@ characters";
 "%@ %@ · 本期（%@）：%@ 个字符；上期（%@）：%@ 个字符；变化 %@ 个字符" = "%1$@ %2$@ · Current (%3$@): %4$@ characters; previous (%5$@): %6$@ characters; change %7$@ characters";
+
+"长按连续发声" = "Play sounds on key repeat";
+"跟随系统按键重复节奏播放按下音；不增加物理按下次数" = "Plays press sounds at the system key-repeat rate; physical key-press counts stay unchanged.";

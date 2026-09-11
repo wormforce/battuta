@@ -241,9 +241,7 @@ public sealed class BattutaRuntime : IWindowsInputEventSink, IAsyncDisposable
         if (inputEvent.Kind == WindowsInputKind.Keyboard)
         {
             var keyboard = inputEvent.Keyboard;
-            if (settings.IsEnabled
-                && !(keyboard.Phase == KeyPhase.Press && keyboard.IsRepeat)
-                && (keyboard.Phase == KeyPhase.Press || settings.PlaysReleaseSound))
+            if (settings.ShouldPlayKeyboardSound(keyboard.Phase, keyboard.IsRepeat))
             {
                 _ = AudioEngine.PlayKeyboard(
                     keyboard.Key.Id,

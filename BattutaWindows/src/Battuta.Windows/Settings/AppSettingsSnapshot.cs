@@ -1,3 +1,5 @@
+using Battuta.Core.Input;
+
 namespace Battuta.Windows.Settings;
 
 public enum AutomaticUpdateCheckPreference
@@ -27,6 +29,8 @@ public sealed record AppSettingsSnapshot
 
     public bool PlaysReleaseSound { get; init; } = true;
 
+    public bool PlaysKeyRepeatSound { get; init; }
+
     public bool UsesPitchVariation { get; init; } = true;
 
     public bool IsPointerSoundEnabled { get; init; }
@@ -43,6 +47,11 @@ public sealed record AppSettingsSnapshot
 
     public AutomaticUpdateCheckPreference AutomaticUpdateCheckPreference { get; init; }
         = AutomaticUpdateCheckPreference.Undecided;
+
+    public bool ShouldPlayKeyboardSound(KeyPhase phase, bool isRepeat) =>
+        IsEnabled && (phase == KeyPhase.Press
+            ? !isRepeat || PlaysKeyRepeatSound
+            : PlaysReleaseSound);
 
     public AppSettingsSnapshot Normalize()
     {

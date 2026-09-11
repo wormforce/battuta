@@ -150,15 +150,28 @@ struct TypingStatsKeyboardView: View {
     }
 
     private func heatLegend(scale: TypingHeatmapScale) -> some View {
-        BattutaHeatmapLegend(
-            leadingLabel: scale.hasValues
+        let exactDescription = L10n.format(
+            "连续颜色图例，从 %@ 到 %@",
+            scale.hasValues
                 ? L10n.format("低 %@ ", statsCount(Int64(scale.low.rounded())))
                     .trimmingCharacters(in: .whitespaces)
                 : L10n.tr("低 0"),
-            trailingLabel: scale.hasValues
+            scale.hasValues
                 ? L10n.format("高 ≥%@", statsCount(Int64(scale.high.rounded())))
                 : L10n.tr("高 0")
         )
+
+        return BattutaHeatmapLegend(
+            leadingLabel: scale.hasValues
+                ? L10n.format("低 %@ ", statsCompactKeyCount(Int64(scale.low.rounded())))
+                    .trimmingCharacters(in: .whitespaces)
+                : L10n.tr("低 0"),
+            trailingLabel: scale.hasValues
+                ? L10n.format("高 ≥%@", statsCompactKeyCount(Int64(scale.high.rounded())))
+                : L10n.tr("高 0")
+        )
+        .help(exactDescription)
+        .accessibilityLabel(exactDescription)
     }
 }
 
@@ -637,47 +650,22 @@ private struct TypingStatsKeycap: View {
 }
 
 private func statsCompactKeyCount(_ count: Int64) -> String {
-    if statsPrefersChineseUI() {
-        guard count >= 10_000 else { return statsCount(count) }
-        if count >= 100_000_000 {
-            return compactChineseNumber(Double(count) / 100_000_000, unit: "亿")
-        }
-        return compactChineseNumber(Double(count) / 10_000, unit: "万")
-    }
-    return compactEnglishNumber(count)
-}
+    guard count > 10_000 else { return statsCount(count) }
 
-private func compactChineseNumber(_ value: Double, unit: String) -> String {
-    let decimals = value < 100 ? 1 : 0
-    return value.formatted(
+    let suffixes = ["K", "M", "B", "T", "Q", "E"]
+    var scaled = Double(count) / 1_000
+    var unitIndex = 0
+    // Promote values that round to 1,000 so labels never show 1,000K or 1,000M.
+    while scaled >= 999.5 && unitIndex < suffixes.count - 1 {
+        scaled /= 1_000
+        unitIndex += 1
+    }
+
+    return scaled.formatted(
         .number
-            .precision(.fractionLength(0...decimals))
-            .rounded(rule: .down)
+            .grouping(.never)
+            .precision(.significantDigits(1...3))
+            .rounded(rule: .toNearestOrAwayFromZero)
             .locale(L10n.locale)
-    ) + unit
-}
-
-private func compactEnglishNumber(_ count: Int64) -> String {
-    guard count >= 1_000 else { return statsCount(count) }
-
-    let units: [(threshold: Double, suffix: String)] = [
-        (1_000_000_000, "B"),
-        (1_000_000, "M"),
-        (1_000, "K"),
-    ]
-
-    let absolute = Double(count)
-    for unit in units where absolute >= unit.threshold {
-        let scaled = absolute / unit.threshold
-        let decimals = scaled < 10 ? 1 : 0
-        let formatted = scaled.formatted(
-            .number
-                .precision(.fractionLength(0...decimals))
-                .rounded(rule: .down)
-                .locale(L10n.locale)
-        )
-        return formatted + unit.suffix
-    }
-
-    return statsCount(count)
+    ) + suffixes[unitIndex]
 }

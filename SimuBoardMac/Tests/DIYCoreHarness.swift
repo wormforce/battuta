@@ -301,6 +301,7 @@ private struct DIYCoreHarness {
             try testPointerEventMapping(&results)
             try testPerceptualKeyboardVolume(&results)
             try testPointerSettingsAndResources(&results)
+            try testKeyRepeatSound(&results)
             try await testLocalBCPSoundPackInstaller(&results)
             try testLaunchAtLoginInstallPaths(&results)
             try testValidatorAndResolver(&results)
@@ -597,6 +598,36 @@ private struct DIYCoreHarness {
             KeyboardMonitor.decodedInputEvent(type: .mouseMoved, event: ignoredEvent) == nil,
             "unobserved mouse movement should not decode into input audio"
         )
+    }
+
+    @MainActor
+    private static func testKeyRepeatSound(_ results: inout HarnessResults) throws {
+        let suiteName = "SimuBoard.DIYCoreHarness.KeyRepeat.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suiteName) else {
+            throw HarnessFailure.assertion("could not create key-repeat UserDefaults")
+        }
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let settings = AppSettings(defaults: defaults)
+        let press = KeyboardEvent(kind: .keyDown, keyCode: 51, isRepeat: false)
+        let repeated = KeyboardEvent(kind: .keyDown, keyCode: 51, isRepeat: true)
+        let release = KeyboardEvent(kind: .keyUp, keyCode: 51, isRepeat: false)
+        try results.check(!settings.playsKeyRepeatSound, "key-repeat sound must remain opt-in")
+        try results.check(settings.shouldPlaySound(for: press), "physical presses should play")
+        try results.check(!settings.shouldPlaySound(for: repeated), "legacy settings must suppress repeats")
+        settings.playsKeyRepeatSound = true
+        try results.check(AppSettings(defaults: defaults).playsKeyRepeatSound, "repeat opt-in must persist")
+        try results.check(settings.shouldPlaySound(for: repeated), "enabled repeats should play press sounds")
+        settings.playsReleaseSound = false
+        try results.check(settings.shouldPlaySound(for: repeated), "repeat sounds must not depend on release sounds")
+        try results.check(!settings.shouldPlaySound(for: release), "repeats must not bypass the release preference")
+        settings.playsReleaseSound = true
+        try results.check(settings.shouldPlaySound(for: release), "a physical release should still play once")
+        settings.isEnabled = false
+        for event in [press, repeated, release] {
+            try results.check(!settings.shouldPlaySound(for: event), "pause must suppress every keyboard sound")
+        }
+        settings.playsKeyRepeatSound = false
+        try results.check(!AppSettings(defaults: defaults).playsKeyRepeatSound, "disabling repeats must persist")
     }
 
     @MainActor

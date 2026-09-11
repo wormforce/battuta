@@ -321,6 +321,9 @@ private struct KeyboardSoundSection: View {
 
             Toggle("播放键盘回弹音", isOn: $settings.playsReleaseSound)
                 .disabled(!settings.isEnabled)
+            Toggle("长按连续发声", isOn: $settings.playsKeyRepeatSound)
+                .disabled(!settings.isEnabled)
+                .help("跟随系统按键重复节奏播放按下音；不增加物理按下次数")
             Toggle("自然音色变化（键盘轮换 / 点击音高）", isOn: $settings.usesPitchVariation)
                 .help("键盘在四种轻微变化间轮换；点击音使用轻微随机音高")
         }
