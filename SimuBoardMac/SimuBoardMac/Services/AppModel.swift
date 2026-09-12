@@ -485,9 +485,7 @@ final class AppModel: ObservableObject {
 
     private func handle(_ event: KeyboardEvent) {
         let occurredAt = Date()
-        let shouldPlaySound = settings.isEnabled
-            && !(event.kind == .keyDown && event.isRepeat)
-            && !(event.kind == .keyUp && !settings.playsReleaseSound)
+        let shouldPlaySound = settings.shouldPlaySound(for: event)
 
         if shouldPlaySound {
             let phase: KeySoundPhase = event.kind == .keyDown ? .press : .release

@@ -17,6 +17,18 @@ dotnet test tests/Battuta.Core.Tests/Battuta.Core.Tests.csproj
 dotnet test tests/Battuta.Windows.Tests/Battuta.Windows.Tests.csproj
 ```
 
+## 长按连续发声
+
+在通知区域面板的键盘设置中开启“长按连续发声”，长按退格、方向键等会跟随 Windows 的按键重复延迟和速度播放按下音，松开后停止。默认关闭，修改后自动保存。回弹音仍只在真实松开时播放，物理按下次数不计入长按重复。
+
+## 找到 BCP (Suit80)
+
+打开通知区域的 Battuta 面板，在键盘音色下拉列表中向下滚动，选择 `BCP (Suit80) · 线性`。它位于基础内置音色之后，是只读内置音色，无需自行导入。
+
+GitHub 的 Windows 1.2.2 便携 ZIP 包已包含 BCP 的 28 段录音。请完整解压后运行 `Battuta.exe`，不要只复制 EXE：同目录必须保留 `BundledSoundPacks/15d04652-5265-4ea7-a376-8a7e11ff6813.simuboardpack/` 及其 `manifest.json`、`assets/` 和 `licenses/`。旧版本用户可从 [GitHub Releases](https://github.com/wormforce/battuta/releases) 下载完整便携包。
+
+若仍未显示，请在 issue 中提供应用版本、安装来源（GitHub 便携包或 Microsoft Store）及该目录是否存在，以便区分版本差异、解压不完整和加载失败。无需删除设置或统计数据库。
+
 ## Windows 安装包
 
 正式安装链路使用 MSIX。开发签名包、Microsoft Store 包、官网直发签名包和

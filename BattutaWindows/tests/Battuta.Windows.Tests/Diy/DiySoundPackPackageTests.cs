@@ -142,6 +142,18 @@ public sealed class DiySoundPackPackageTests
     }
 
     [Fact]
+    public async Task DefaultRuntimePathIncludesBundledBcp()
+    {
+        using var root = new TemporaryDirectory();
+        using var library = new DiySoundPackLibrary(root.Combine("library"));
+        var descriptors = await library.DescriptorsAsync();
+        var bcp = Assert.Single(descriptors, item => item.CustomPackId == BundledBcpPackId);
+        Assert.Equal("BCP (Suit80)", bcp.Name);
+        Assert.True(bcp.IsReadOnly);
+        Assert.Equal(28, (await library.LoadAsync(BundledBcpPackId)).Manifest.Assets.Count);
+    }
+
+    [Fact]
     public async Task LibraryEnumeratesAndLoadsBundledReadOnlyPack()
     {
         using var root = new TemporaryDirectory();
