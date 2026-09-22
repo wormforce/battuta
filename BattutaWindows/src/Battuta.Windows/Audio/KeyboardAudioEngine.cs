@@ -1,5 +1,6 @@
 using Battuta.Core.Audio;
 using Battuta.Core.Input;
+using Battuta.Core.Settings;
 using Battuta.Core.SoundPacks;
 
 namespace Battuta.Windows.Audio;
@@ -198,7 +199,7 @@ public sealed class KeyboardAudioEngine
         }
 
         var variant = sample.NextVariant(variationEnabled);
-        var gain = ClampVolume(volume * variant.Gain);
+        var gain = (float)AppSettingsMigration.ClampKeyboardVolume(volume) * variant.Gain;
         return mixer.TrySchedule(sample.Pcm, gain, variant.Rate, allowsStealing: true);
     }
 
@@ -225,12 +226,17 @@ public sealed class KeyboardAudioEngine
             button.PlaybackRate * variation,
             AudioConstants.MinimumPlaybackRate,
             AudioConstants.MaximumPlaybackRate);
-        return mixer.TrySchedule(sample, ClampVolume(volume), rate, allowsStealing: false);
+        return mixer.TrySchedule(
+            sample,
+            (float)AppSettingsMigration.ClampPointerVolume(volume),
+            rate,
+            allowsStealing: false);
     }
 
     public bool Preview(PreparedPcmSample sample, double volume, float rate = 1f) =>
-        mixer.TrySchedule(sample, ClampVolume(volume), rate, allowsStealing: true);
-
-    private static float ClampVolume(double volume) =>
-        double.IsFinite(volume) ? (float)Math.Clamp(volume, 0, 1) : 0f;
+        mixer.TrySchedule(
+            sample,
+            (float)AppSettingsMigration.ClampKeyboardVolume(volume),
+            rate,
+            allowsStealing: true);
 }

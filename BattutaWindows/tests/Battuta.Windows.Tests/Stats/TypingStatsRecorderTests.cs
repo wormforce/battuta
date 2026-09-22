@@ -51,10 +51,12 @@ public sealed class TypingStatsRecorderTests
         for (var index = 0; index < 100; index++)
         {
             recorder.RecordKeyDown(PhysicalKeys.KeyA, false, false, App, Now);
+            recorder.RecordMouseDown(Now);
         }
 
         Assert.False(await recorder.FlushPendingAsync());
         recorder.RecordKeyDown(PhysicalKeys.KeyB, false, false, App, Now.AddSeconds(1));
+        recorder.RecordMouseDown(Now.AddSeconds(1));
         Assert.True(await recorder.FlushPendingAsync());
 
         Assert.Equal(3, persistence.Attempts);
@@ -68,6 +70,11 @@ public sealed class TypingStatsRecorderTests
             persistence.SuccessfulBatches
                 .SelectMany(batch => batch.KeyAggregates)
                 .Sum(item => item.Count));
+        Assert.Equal(
+            101,
+            persistence.SuccessfulBatches
+                .SelectMany(batch => batch.MouseAggregates)
+                .Sum(item => item.Count));
     }
 
     [Fact]
@@ -76,6 +83,7 @@ public sealed class TypingStatsRecorderTests
         var persistence = new CapturingPersistence(failuresBeforeSuccess: 6);
         await using var recorder = CreateRecorder(persistence);
         recorder.RecordKeyDown(PhysicalKeys.KeyA, false, false, App, Now);
+        recorder.RecordMouseDown(Now);
 
         for (var attempt = 0; attempt < 6; attempt++)
         {
@@ -84,16 +92,101 @@ public sealed class TypingStatsRecorderTests
 
         Assert.True(recorder.IsRecordingSuspended);
         recorder.RecordKeyDown(PhysicalKeys.KeyB, false, false, App, Now.AddSeconds(1));
+        recorder.RecordMouseDown(Now.AddSeconds(1));
         Assert.True(await recorder.FlushPendingAsync());
         Assert.False(recorder.IsRecordingSuspended);
 
         recorder.RecordKeyDown(PhysicalKeys.KeyC, false, false, App, Now.AddSeconds(2));
+        recorder.RecordMouseDown(Now.AddSeconds(2));
         Assert.True(await recorder.FlushPendingAsync());
         Assert.Equal(
             2,
             persistence.SuccessfulBatches
                 .SelectMany(batch => batch.CharacterAggregates)
                 .Sum(item => item.Count));
+        Assert.Equal(
+            2,
+            persistence.SuccessfulBatches
+                .SelectMany(batch => batch.MouseAggregates)
+                .Sum(item => item.Count));
+    }
+
+    [Fact]
+    public async Task MouseOnlyBatchesUseLocalDateAtEventTimeAcrossMidnight()
+    {
+        var persistence = new CapturingPersistence();
+        var zone = TimeZoneInfo.CreateCustomTimeZone("Stats UTC+8", TimeSpan.FromHours(8), "UTC+8", "UTC+8");
+        await using var recorder = new TypingStatsRecorder(persistence, zone, TimeSpan.FromHours(1));
+        var beforeLocalMidnight = new DateTimeOffset(2026, 8, 24, 15, 59, 59, TimeSpan.Zero);
+        recorder.RecordMouseDown(beforeLocalMidnight);
+        recorder.RecordMouseDown(beforeLocalMidnight.AddSeconds(1));
+        recorder.RecordMouseDown(beforeLocalMidnight.AddSeconds(2));
+
+        Assert.True(await recorder.FlushPendingAsync());
+        var batch = Assert.Single(persistence.SuccessfulBatches);
+        Assert.Empty(batch.CharacterAggregates);
+        Assert.Empty(batch.KeyAggregates);
+        Assert.Equal(
+            [new MouseClickAggregate(new DateOnly(2026, 8, 24), 1), new MouseClickAggregate(new DateOnly(2026, 8, 25), 2)],
+            batch.MouseAggregates);
+    }
+
+    [Fact]
+    public async Task ClearDiscardsFailedMouseBatchAndPendingInput()
+    {
+        var persistence = new CapturingPersistence(failuresBeforeSuccess: 2);
+        await using var recorder = CreateRecorder(persistence);
+        recorder.RecordMouseDown(Now);
+        Assert.False(await recorder.FlushPendingAsync());
+        recorder.RecordMouseDown(Now.AddSeconds(1));
+
+        await recorder.ClearAllAsync();
+        Assert.True(await recorder.FlushPendingAsync());
+        Assert.Empty(persistence.SuccessfulBatches);
+        Assert.Null(recorder.LastWriteError);
+
+        recorder.RecordMouseDown(Now.AddSeconds(2));
+        Assert.True(await recorder.FlushPendingAsync());
+        Assert.Equal(1, Assert.Single(Assert.Single(persistence.SuccessfulBatches).MouseAggregates).Count);
+    }
+
+    [Fact]
+    public async Task InputSinkCountsEachHardwareMouseButtonPressAndHonorsStatisticsToggle()
+    {
+        var persistence = new CapturingPersistence();
+        await using var recorder = CreateRecorder(persistence);
+        var enabled = true;
+        var sink = new TypingStatsInputEventSink(recorder, () => enabled);
+
+        async Task Send(WindowsPointerButton button, KeyPhase phase, WindowsInputOrigin origin) =>
+            await sink.OnInputAsync(
+                WindowsInputEvent.FromMouse(
+                    new WindowsPointerInputEvent(button, phase, origin, Now, 1),
+                    ForegroundApplicationSnapshot.Unknown),
+                CancellationToken.None);
+
+        foreach (var button in Enum.GetValues<WindowsPointerButton>())
+        {
+            await Send(button, KeyPhase.Press, WindowsInputOrigin.Hardware);
+            await Send(button, KeyPhase.Release, WindowsInputOrigin.Hardware);
+            await Send(button, KeyPhase.Press, WindowsInputOrigin.Injected);
+            await Send(button, KeyPhase.Press, WindowsInputOrigin.LowerIntegrityInjected);
+        }
+
+        await Send((WindowsPointerButton)99, KeyPhase.Press, WindowsInputOrigin.Hardware);
+        enabled = false;
+        await Send(WindowsPointerButton.Primary, KeyPhase.Press, WindowsInputOrigin.Hardware);
+        Assert.True(await recorder.FlushPendingAsync());
+
+        var batch = Assert.Single(persistence.SuccessfulBatches);
+        Assert.Equal(5, Assert.Single(batch.MouseAggregates).Count);
+        Assert.Empty(batch.CharacterAggregates);
+        Assert.Empty(batch.KeyAggregates);
+
+        enabled = true;
+        await Send(WindowsPointerButton.Primary, KeyPhase.Press, WindowsInputOrigin.Hardware);
+        Assert.True(await recorder.FlushPendingAsync());
+        Assert.Equal(6, persistence.SuccessfulBatches.SelectMany(item => item.MouseAggregates).Sum(item => item.Count));
     }
 
     [Fact]

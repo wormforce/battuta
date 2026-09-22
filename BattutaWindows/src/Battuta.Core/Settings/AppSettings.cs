@@ -67,6 +67,8 @@ public static class AppSettingsDefaults
 {
     public const double KeyboardVolume = 0.42;
     public const double PointerVolumeRatio = 0.65;
+    public const double MaximumKeyboardVolume = 2;
+    public const double MaximumPointerVolume = 1;
 
     public static AppSettingsState Create() => AppSettingsMigration.Normalize(null).Settings;
 }
@@ -77,9 +79,9 @@ public static class AppSettingsMigration
     {
         stored ??= new StoredAppSettings();
 
-        var keyboardVolume = ClampVolume(stored.Volume ?? AppSettingsDefaults.KeyboardVolume);
+        var keyboardVolume = ClampKeyboardVolume(stored.Volume ?? AppSettingsDefaults.KeyboardVolume);
         var seededPointerVolume = stored.PointerVolume is null;
-        var pointerVolume = ClampVolume(
+        var pointerVolume = ClampPointerVolume(
             stored.PointerVolume ?? keyboardVolume * AppSettingsDefaults.PointerVolumeRatio);
 
         var selectionWasValid = SoundPackSelectionId.TryParse(
@@ -130,19 +132,25 @@ public static class AppSettingsMigration
         SchemaVersion = StoredAppSettings.CurrentSchemaVersion,
         Enabled = settings.Enabled,
         SelectedProfile = settings.SelectedSoundPack.Value,
-        Volume = ClampVolume(settings.KeyboardVolume),
+        Volume = ClampKeyboardVolume(settings.KeyboardVolume),
         ReleaseSound = settings.PlaysKeyboardReleaseSound,
         PitchVariation = settings.UsesNaturalVariation,
         PointerSoundEnabled = settings.PointerSoundEnabled,
         SelectedPointerProfile = settings.PointerProfile.Value,
-        PointerVolume = ClampVolume(settings.PointerVolume),
+        PointerVolume = ClampPointerVolume(settings.PointerVolume),
         PointerReleaseSound = settings.PlaysPointerReleaseSound,
         TypingStatsEnabled = settings.TypingStatsEnabled,
         LaunchAtLoginEnabled = settings.LaunchAtLoginEnabled,
     };
 
-    public static double ClampVolume(double volume) =>
-        double.IsFinite(volume) ? Math.Clamp(volume, 0, 1) : 0;
+    public static double ClampKeyboardVolume(double volume) =>
+        ClampVolume(volume, AppSettingsDefaults.MaximumKeyboardVolume);
+
+    public static double ClampPointerVolume(double volume) =>
+        ClampVolume(volume, AppSettingsDefaults.MaximumPointerVolume);
+
+    private static double ClampVolume(double volume, double maximum) =>
+        double.IsFinite(volume) ? Math.Clamp(volume, 0, maximum) : 0;
 
     private static bool HasMissingValues(StoredAppSettings stored) =>
         stored.Enabled is null

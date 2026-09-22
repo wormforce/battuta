@@ -142,7 +142,9 @@
                                 <TextBlock x:Name="KeyboardVolumeText" Text="42%" HorizontalAlignment="Right" FontFamily="Cascadia Mono"
                                            Foreground="{DynamicResource Battuta.SecondaryTextBrush}" />
                             </Grid>
-                            <Slider x:Name="KeyboardVolumeSlider" Margin="0,5,0,0" Minimum="0" Maximum="100" Value="42" />
+                            <Slider x:Name="KeyboardVolumeSlider" Margin="0,5,0,0" Minimum="0" Maximum="200" Value="42"
+                                    ToolTip="可放大至 200%；超过 100% 可能失真。"
+                                    AutomationProperties.HelpText="键盘音量范围为 0% 至 200%；超过 100% 可能失真。" />
                             <CheckBox x:Name="KeyboardReleaseToggle" Margin="0,10,0,0" Content="播放键盘回弹音" IsChecked="True" FontSize="11" />
                             <CheckBox x:Name="KeyboardRepeatToggle" Margin="0,8,0,0" Content="长按连续发声" IsChecked="False" FontSize="11"
                                       ToolTip="跟随系统按键重复节奏播放按下音；不增加物理按下次数" />

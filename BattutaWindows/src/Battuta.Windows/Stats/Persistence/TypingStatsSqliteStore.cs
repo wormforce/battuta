@@ -8,14 +8,14 @@ namespace Battuta.Windows.Stats.Persistence;
 
 /// <summary>
 /// Native Windows typing-statistics store. It persists only aggregate counts,
-/// physical key IDs, time buckets, and foreground application identity.
+/// physical key IDs, daily mouse-click totals, time buckets, and foreground application identity.
 /// </summary>
 public sealed class TypingStatsSqliteStore : ITypingStatsPersistence, IAsyncDisposable
 {
     // ASCII "BTTA". This prevents a copied macOS v2 database from being
     // mistaken for the Windows PhysicalKeyId schema and silently rewritten.
     public const int ApplicationId = 0x42545441;
-    public const int SchemaVersion = 1;
+    public const int SchemaVersion = 2;
     public const int HistoryDayCount = 14;
     public const int DetailedRetentionDays = 31;
 
@@ -110,6 +110,22 @@ public sealed class TypingStatsSqliteStore : ITypingStatsPersistence, IAsyncDisp
                         cancellationToken);
                 }
 
+                foreach (var aggregate in batch.MouseAggregates)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (aggregate.Count <= 0)
+                    {
+                        continue;
+                    }
+
+                    await UpsertMouseAggregateAsync(
+                        aggregate,
+                        updatedAt,
+                        connection,
+                        transaction,
+                        cancellationToken);
+                }
+
                 var cleanupDate = await PerformCleanupIfNeededAsync(
                     connection,
                     transaction,
@@ -174,7 +190,20 @@ public sealed class TypingStatsSqliteStore : ITypingStatsPersistence, IAsyncDisp
                     recentTimeline.AppTimelines,
                     await LoadHistoryAsync(now, connection, transaction, cancellationToken),
                     await LoadKeyCountsAsync(today, connection, transaction, cancellationToken),
-                    await LoadAllTimeKeyCountsAsync(connection, transaction, cancellationToken));
+                    await LoadAllTimeKeyCountsAsync(connection, transaction, cancellationToken))
+                {
+                    TodayMouseClicks = await ExecuteScalarInt64Async(
+                        connection,
+                        transaction,
+                        "SELECT COALESCE(SUM(ClickCount), 0) FROM MouseDailyStat WHERE LocalDate = $localDate;",
+                        cancellationToken,
+                        ("$localDate", DateKey(today))),
+                    AllTimeMouseClicks = await ExecuteScalarInt64Async(
+                        connection,
+                        transaction,
+                        "SELECT COALESCE(SUM(ClickCount), 0) FROM MouseDailyStat;",
+                        cancellationToken),
+                };
                 await transaction.CommitAsync(cancellationToken);
                 return snapshot;
             }
@@ -319,6 +348,7 @@ public sealed class TypingStatsSqliteStore : ITypingStatsPersistence, IAsyncDisp
                     DELETE FROM CharacterSecondStat;
                     DELETE FROM KeyDailyStat;
                     DELETE FROM KeyTotalStat;
+                    DELETE FROM MouseDailyStat;
                     DELETE FROM HourDayStat;
                     DELETE FROM AppDayStat;
                     DELETE FROM DayStat;
@@ -486,7 +516,7 @@ public sealed class TypingStatsSqliteStore : ITypingStatsPersistence, IAsyncDisp
             version = SchemaVersion;
         }
 
-        if (applicationId != ApplicationId || version != SchemaVersion)
+        if (applicationId != ApplicationId || version is not (1 or SchemaVersion))
         {
             throw new TypingStatsStoreException(
                 TypingStatsStoreErrorKind.IncompatibleSchema,
@@ -504,6 +534,11 @@ public sealed class TypingStatsSqliteStore : ITypingStatsPersistence, IAsyncDisp
             ["HourDayStat"] = ["LocalDate", "LocalHour", "CharacterCount", "ActiveMinuteBuckets", "ActiveSeconds", "PeakCPS", "UpdatedAtUtc"],
         };
 
+        if (version >= 2)
+        {
+            requiredSchema["MouseDailyStat"] = ["LocalDate", "ClickCount", "UpdatedAtUtc"];
+        }
+
         foreach (var (table, requiredColumns) in requiredSchema)
         {
             var columns = await LoadColumnNamesAsync(connection, table, cancellationToken);
@@ -514,7 +549,37 @@ public sealed class TypingStatsSqliteStore : ITypingStatsPersistence, IAsyncDisp
                     $"Battuta Windows 本地统计数据库缺少 {table} 所需字段。");
             }
         }
+
+        // Validate the existing keyboard schema before migrating. An incompatible
+        // or foreign database must remain untouched, including its user_version.
+        if (version == 1)
+        {
+            using var transaction = connection.BeginTransaction(deferred: false);
+            try
+            {
+                await ExecuteNonQueryAsync(
+                    connection,
+                    transaction,
+                    CreateMouseSchemaSql,
+                    cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch
+            {
+                await TryRollbackAsync(transaction);
+                throw;
+            }
+        }
     }
+
+    private const string CreateMouseSchemaSql = """
+        CREATE TABLE MouseDailyStat (
+            LocalDate TEXT PRIMARY KEY CHECK(length(LocalDate) = 10),
+            ClickCount INTEGER NOT NULL CHECK(ClickCount >= 0),
+            UpdatedAtUtc INTEGER NOT NULL
+        ) WITHOUT ROWID;
+        PRAGMA user_version = 2;
+        """;
 
     private const string CreateSchemaSql = """
         CREATE TABLE AppProfile (
@@ -707,8 +772,7 @@ public sealed class TypingStatsSqliteStore : ITypingStatsPersistence, IAsyncDisp
         END;
 
         PRAGMA application_id = 1112822849;
-        PRAGMA user_version = 1;
-        """;
+        """ + CreateMouseSchemaSql;
 
     private async Task<long> UpsertApplicationAsync(
         TypingApplicationIdentity application,
@@ -832,6 +896,27 @@ public sealed class TypingStatsSqliteStore : ITypingStatsPersistence, IAsyncDisp
             ("$pressCount", aggregate.Count),
             ("$updatedAt", updatedAt));
     }
+
+    private static Task<int> UpsertMouseAggregateAsync(
+        MouseClickAggregate aggregate,
+        long updatedAt,
+        SqliteConnection connection,
+        SqliteTransaction transaction,
+        CancellationToken cancellationToken) =>
+        ExecuteNonQueryAsync(
+            connection,
+            transaction,
+            """
+            INSERT INTO MouseDailyStat (LocalDate, ClickCount, UpdatedAtUtc)
+            VALUES ($localDate, $clickCount, $updatedAt)
+            ON CONFLICT(LocalDate) DO UPDATE SET
+                ClickCount = ClickCount + excluded.ClickCount,
+                UpdatedAtUtc = excluded.UpdatedAtUtc;
+            """,
+            cancellationToken,
+            ("$localDate", DateKey(aggregate.LocalDate)),
+            ("$clickCount", aggregate.Count),
+            ("$updatedAt", updatedAt));
 
     private async Task<DateOnly?> PerformCleanupIfNeededAsync(
         SqliteConnection connection,

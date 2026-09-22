@@ -50,6 +50,24 @@ public sealed class PolyphonicSampleProviderTests
         Assert.Equal([0.5f, 0.5f, 0.125f, 0.125f], output);
     }
 
+    [Theory]
+    [InlineData(1.5f)]
+    [InlineData(2f)]
+    [InlineData(2.04f)]
+    public void AmplificationPreservesQuietSamplesIncludingNaturalVariation(float gain)
+    {
+        var mixer = new PolyphonicSampleProvider();
+        Assert.True(mixer.TrySchedule(new PreparedPcmSample([0.25f, -0.25f]), gain, 1f));
+        var output = new float[4];
+
+        mixer.Read(output);
+
+        Assert.Equal(0.25f * gain, output[0], precision: 6);
+        Assert.Equal(-0.25f * gain, output[2], precision: 6);
+        Assert.Equal(output[0], output[1]);
+        Assert.Equal(output[2], output[3]);
+    }
+
     [Fact]
     public void SixteenVoicesOverlapAndSeventeenthStealsOldestSlot()
     {
@@ -133,16 +151,16 @@ public sealed class PolyphonicSampleProviderTests
     public void MixedOutputIsBoundedWhenManyLoudVoicesOverlap()
     {
         var mixer = new PolyphonicSampleProvider();
-        var sample = new PreparedPcmSample([0.9f, 0.9f]);
+        var sample = new PreparedPcmSample([0.9f, -0.9f]);
         for (var index = 0; index < AudioConstants.VoiceCount; index++)
         {
-            mixer.TrySchedule(sample, 1, 1);
+            mixer.TrySchedule(sample, 2, 1);
         }
 
-        var output = new float[2];
+        var output = new float[4];
         mixer.Read(output);
 
-        Assert.Equal([1f, 1f], output);
+        Assert.Equal([1f, 1f, -1f, -1f], output);
     }
 
     [Fact]

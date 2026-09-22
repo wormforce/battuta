@@ -1,6 +1,6 @@
 # Battuta Privacy Policy
 
-Effective date: August 25, 2026
+Effective date: September 22, 2026
 
 Battuta is a keyboard and pointer sound application for Windows. This policy
 describes the information processed by the Windows version of Battuta and how
@@ -15,7 +15,7 @@ optional aggregate statistics:
 - mouse button identifiers and press/release states;
 - event timestamps;
 - the identity of the foreground application;
-- aggregate per-key, per-day, and per-application counts;
+- aggregate per-key, per-day, and per-application counts, including daily mouse click totals;
 - application settings and user-created sound packs.
 
 Battuta does **not** read, reconstruct, store, or transmit typed text,
@@ -68,7 +68,7 @@ Questions about this policy can be sent to
 
 # Battuta 隐私政策
 
-生效日期：2026 年 8 月 25 日
+生效日期：2026 年 9 月 22 日
 
 Battuta 是一款 Windows 键盘与鼠标音效应用。本政策说明 Windows 版 Battuta
 在用户设备上处理哪些信息，以及用户如何控制这些信息。
@@ -81,7 +81,7 @@ Battuta 是一款 Windows 键盘与鼠标音效应用。本政策说明 Windows 
 - 鼠标按钮标识及按下/抬起状态；
 - 事件时间；
 - 前台应用身份；
-- 按键、日期和应用维度的汇总次数；
+- 按键、日期和应用维度的汇总次数，包括每日鼠标点击总数；
 - 应用设置和用户创建的音色包。
 
 Battuta **不会**读取、还原、保存或传输输入文字、密码、剪贴板内容、窗口标题、

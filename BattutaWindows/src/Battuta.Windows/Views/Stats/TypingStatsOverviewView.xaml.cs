@@ -23,6 +23,8 @@ public partial class TypingStatsOverviewView : UserControl
             LastInputText.Text = "还没有输入记录";
             ActiveTimeText.Text = "0 秒";
             ActiveMinutesText.Text = "0 个输入分钟";
+            TodayMouseClicksText.Text = "0";
+            AllTimeMouseClicksText.Text = "0";
             TrendTotalText.Text = "0";
             TrendPeakText.Text = "0";
             ApplicationCountText.Text = "0 个应用";
@@ -46,6 +48,8 @@ public partial class TypingStatsOverviewView : UserControl
             : "最近输入 --:--";
         ActiveTimeText.Text = FormatDuration(today.ActiveSeconds);
         ActiveMinutesText.Text = $"{today.ActiveMinuteBuckets:N0} 个输入分钟";
+        TodayMouseClicksText.Text = snapshot.TodayMouseClicks.ToString("N0", CultureInfo.CurrentCulture);
+        AllTimeMouseClicksText.Text = snapshot.AllTimeMouseClicks.ToString("N0", CultureInfo.CurrentCulture);
 
         var values = snapshot.RecentBuckets.Select(bucket => bucket.CharacterCount).ToArray();
         Trend.Buckets = snapshot.RecentBuckets;

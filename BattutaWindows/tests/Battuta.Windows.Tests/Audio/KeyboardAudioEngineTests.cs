@@ -40,8 +40,11 @@ public sealed class KeyboardAudioEngineTests
         }
     }
 
-    [Fact]
-    public async Task PointerButtonsFallbackToPrimaryAndKeepIndependentVolume()
+    [Theory]
+    [InlineData(0.25, 0.05f)]
+    [InlineData(1, 0.2f)]
+    [InlineData(2, 0.2f)]
+    public async Task PointerButtonsFallbackToPrimaryAndKeepIndependentVolume(double volume, float expected)
     {
         var root = Path.Combine(Path.GetTempPath(), $"battuta-pointer-bank-{Guid.NewGuid():N}");
         try
@@ -58,12 +61,12 @@ public sealed class KeyboardAudioEngineTests
             Assert.True(engine.PlayPointer(
                 PointerButton.Secondary,
                 PointerSoundPhase.Press,
-                volume: 0.25,
+                volume: volume,
                 variationEnabled: true));
             var output = new float[2];
             mixer.Read(output);
 
-            Assert.Equal(0.05f, output[0], precision: 3);
+            Assert.Equal(expected, output[0], precision: 3);
             Assert.Equal(output[0], output[1]);
             Assert.Equal(PointerSoundProfiles.Classic, engine.LoadedPointerProfileId);
         }
@@ -124,8 +127,12 @@ public sealed class KeyboardAudioEngineTests
         }
     }
 
-    [Fact]
-    public async Task KeyboardVariationUsesPerSampleBalancedCycle()
+    [Theory]
+    [InlineData(0.5)]
+    [InlineData(1)]
+    [InlineData(1.5)]
+    [InlineData(2)]
+    public async Task KeyboardVariationUsesPerSampleBalancedCycle(double volume)
     {
         var root = Path.Combine(Path.GetTempPath(), $"battuta-variant-bank-{Guid.NewGuid():N}");
         try
@@ -142,7 +149,7 @@ public sealed class KeyboardAudioEngineTests
                 Assert.True(engine.PlayKeyboard(
                     PhysicalKeys.KeyA,
                     KeySoundPhase.Press,
-                    volume: 0.5,
+                    volume: volume,
                     variationEnabled: true));
                 var output = new float[2];
                 mixer.Read(output);
@@ -150,10 +157,10 @@ public sealed class KeyboardAudioEngineTests
                 mixer.Read(new float[64]); // let a sub-1.0 rate variant finish before the next press
             }
 
-            Assert.Equal(0.1f, observedFirstFrames[0], precision: 3);
-            Assert.Equal(0.099f, observedFirstFrames[1], precision: 3); // recipe index 2
-            Assert.Equal(0.0975f, observedFirstFrames[2], precision: 3); // recipe index 1
-            Assert.Equal(0.102f, observedFirstFrames[3], precision: 3); // recipe index 3
+            Assert.Equal(0.2f * (float)volume, observedFirstFrames[0], precision: 3);
+            Assert.Equal(0.198f * (float)volume, observedFirstFrames[1], precision: 3); // recipe index 2
+            Assert.Equal(0.195f * (float)volume, observedFirstFrames[2], precision: 3); // recipe index 1
+            Assert.Equal(0.204f * (float)volume, observedFirstFrames[3], precision: 3); // recipe index 3
         }
         finally
         {
@@ -161,8 +168,10 @@ public sealed class KeyboardAudioEngineTests
         }
     }
 
-    [Fact]
-    public async Task CustomPackIsPreloadedAndFallsBackToItsBuiltInBaseProfile()
+    [Theory]
+    [InlineData(0.5)]
+    [InlineData(2)]
+    public async Task CustomPackIsPreloadedAndFallsBackToItsBuiltInBaseProfile(double volume)
     {
         var root = Path.Combine(Path.GetTempPath(), $"battuta-custom-bank-{Guid.NewGuid():N}");
         try
@@ -202,21 +211,21 @@ public sealed class KeyboardAudioEngineTests
             Assert.True(engine.PlayKeyboard(
                 PhysicalKeys.KeyA,
                 KeySoundPhase.Press,
-                volume: 0.5,
+                volume: volume,
                 variationEnabled: false));
             var customOutput = new float[2];
             mixer.Read(customOutput);
-            Assert.Equal(0.3f, customOutput[0], precision: 3);
+            Assert.Equal(Math.Min(0.6f * (float)volume, 1f), customOutput[0], precision: 3);
             mixer.Read(new float[2_000]);
 
             Assert.True(engine.PlayKeyboard(
                 PhysicalKeys.KeyA,
                 KeySoundPhase.Release,
-                volume: 0.5,
+                volume: volume,
                 variationEnabled: false));
             var fallbackOutput = new float[2];
             mixer.Read(fallbackOutput);
-            Assert.Equal(0.05f, fallbackOutput[0], precision: 3);
+            Assert.Equal(0.1f * (float)volume, fallbackOutput[0], precision: 3);
         }
         finally
         {
