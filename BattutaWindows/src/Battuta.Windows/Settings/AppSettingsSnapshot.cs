@@ -1,4 +1,5 @@
 using Battuta.Core.Input;
+using Battuta.Core.Settings;
 
 namespace Battuta.Windows.Settings;
 
@@ -55,10 +56,14 @@ public sealed record AppSettingsSnapshot
 
     public AppSettingsSnapshot Normalize()
     {
-        var keyboardVolume = ClampFinite(Volume, DefaultKeyboardVolume);
+        var keyboardVolume = ClampFinite(
+            Volume,
+            DefaultKeyboardVolume,
+            AppSettingsDefaults.MaximumKeyboardVolume);
         var pointerVolume = ClampFinite(
             PointerVolume,
-            keyboardVolume * PointerVolumeMigrationFactor);
+            keyboardVolume * PointerVolumeMigrationFactor,
+            AppSettingsDefaults.MaximumPointerVolume);
 
         return this with
         {
@@ -73,14 +78,14 @@ public sealed record AppSettingsSnapshot
         };
     }
 
-    private static double ClampFinite(double value, double fallback)
+    private static double ClampFinite(double value, double fallback, double maximum)
     {
         if (double.IsNaN(value) || double.IsInfinity(value))
         {
             value = fallback;
         }
 
-        return Math.Clamp(value, 0, 1);
+        return Math.Clamp(value, 0, maximum);
     }
 
     private static string NormalizeKeyboardProfile(string? value)

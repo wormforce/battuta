@@ -6,8 +6,13 @@ namespace Battuta.Windows.Tests.Audio;
 
 public sealed class DiyAudioAdapterTests
 {
-    [Fact]
-    public async Task PreviewDecodesOffHotPathThenUsesSharedMixer()
+    [Theory]
+    [InlineData(0, 0f)]
+    [InlineData(0.5, 0.1f)]
+    [InlineData(1.5, 0.3f)]
+    [InlineData(2, 0.4f)]
+    [InlineData(3, 0.4f)]
+    public async Task PreviewDecodesOffHotPathThenUsesSharedMixer(double volume, float expected)
     {
         var root = Path.Combine(Path.GetTempPath(), $"battuta-preview-{Guid.NewGuid():N}");
         var path = Path.Combine(root, "preview.wav");
@@ -16,13 +21,13 @@ public sealed class DiyAudioAdapterTests
             AudioTestFiles.WriteMonoPcm16Wave(path, [0.2f, 0.1f]);
             var mixer = new PolyphonicSampleProvider();
             var engine = new KeyboardAudioEngine(mixer);
-            var preview = new DiyAudioPreviewService(engine, volumeProvider: () => 0.5);
+            var preview = new DiyAudioPreviewService(engine, volumeProvider: () => volume);
 
             await preview.PreviewAsync(path);
             var output = new float[2];
             mixer.Read(output);
 
-            Assert.Equal(0.1f, output[0], precision: 3);
+            Assert.Equal(expected, output[0], precision: 3);
             Assert.Equal(output[0], output[1]);
         }
         finally

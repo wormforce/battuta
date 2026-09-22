@@ -4,7 +4,7 @@ using Battuta.Windows.Stats.Models;
 
 namespace Battuta.Windows.Stats.Services;
 
-/// <summary>Routes normalized Windows key-down events into the statistics recorder.</summary>
+/// <summary>Routes normalized Windows key-down and physical mouse-down events into statistics.</summary>
 public sealed class TypingStatsInputEventSink(
     TypingStatsRecorder recorder,
     Func<bool> isEnabled) : IWindowsInputEventSink
@@ -19,8 +19,25 @@ public sealed class TypingStatsInputEventSink(
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (!_isEnabled()
-            || inputEvent.Kind != WindowsInputKind.Keyboard
+        if (!_isEnabled())
+        {
+            return ValueTask.CompletedTask;
+        }
+
+        if (inputEvent.Kind == WindowsInputKind.Mouse)
+        {
+            var pointer = inputEvent.Mouse;
+            if (pointer.Phase == KeyPhase.Press
+                && pointer.Origin == WindowsInputOrigin.Hardware
+                && Enum.IsDefined(pointer.Button))
+            {
+                _recorder.RecordMouseDown(pointer.Timestamp);
+            }
+
+            return ValueTask.CompletedTask;
+        }
+
+        if (inputEvent.Kind != WindowsInputKind.Keyboard
             || inputEvent.Keyboard.Phase != KeyPhase.Press)
         {
             return ValueTask.CompletedTask;

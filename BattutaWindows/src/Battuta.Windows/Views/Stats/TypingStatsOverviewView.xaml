@@ -101,6 +101,44 @@
                 </Border>
             </Grid>
 
+            <Grid Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0" Style="{DynamicResource Battuta.InstrumentCard}" Padding="16">
+                    <StackPanel>
+                        <Grid>
+                            <TextBlock Text="&#xE962;" FontFamily="Segoe Fluent Icons" FontSize="11" />
+                            <TextBlock Text="今日鼠标点击" HorizontalAlignment="Right" Style="{DynamicResource Battuta.Caption2Text}" />
+                        </Grid>
+                        <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" Margin="0,8,0,6">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="TodayMouseClicksText" Text="0" FontSize="32" FontWeight="Bold" FontFamily="Segoe UI Variable Display" />
+                                <TextBlock Text="次" Margin="6,14,0,0" Style="{DynamicResource Battuta.CaptionText}" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Viewbox>
+                        <TextBlock Text="每次按下计 1 次，包含侧键" Style="{DynamicResource Battuta.Caption2Text}" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Style="{DynamicResource Battuta.InstrumentCard}" Padding="16">
+                    <StackPanel>
+                        <Grid>
+                            <TextBlock Text="&#xE81C;" FontFamily="Segoe Fluent Icons" FontSize="11" />
+                            <TextBlock Text="累计鼠标点击" HorizontalAlignment="Right" Style="{DynamicResource Battuta.Caption2Text}" />
+                        </Grid>
+                        <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" Margin="0,8,0,6">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="AllTimeMouseClicksText" Text="0" FontSize="32" FontWeight="Bold" FontFamily="Segoe UI Variable Display" />
+                                <TextBlock Text="次" Margin="6,14,0,0" Style="{DynamicResource Battuta.CaptionText}" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Viewbox>
+                        <TextBlock Text="自启用统计以来的点击总数" Style="{DynamicResource Battuta.Caption2Text}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
             <Border Margin="0,16,0,0" Style="{DynamicResource Battuta.Card}" CornerRadius="20">
                 <StackPanel>
                     <Grid Margin="16">

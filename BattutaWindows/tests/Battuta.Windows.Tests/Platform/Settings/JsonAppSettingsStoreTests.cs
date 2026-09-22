@@ -27,15 +27,19 @@ public sealed class JsonAppSettingsStoreTests
         Assert.Equal(AutomaticUpdateCheckPreference.Undecided, settings.AutomaticUpdateCheckPreference);
     }
 
-    [Fact]
-    public async Task LegacyFileDerivesPointerVolumeFromStoredKeyboardVolume()
+    [Theory]
+    [InlineData(0.8, 0.52)]
+    [InlineData(2, 1)]
+    public async Task LegacyFileDerivesPointerVolumeFromStoredKeyboardVolume(
+        double volume,
+        double expectedPointerVolume)
     {
         using var directory = new TestDirectory();
         var path = Path.Combine(directory.Path, "settings.json");
-        await File.WriteAllTextAsync(path, """
+        await File.WriteAllTextAsync(path, $$"""
             {
               "schemaVersion": 1,
-              "volume": 0.8,
+              "volume": {{volume.ToString(System.Globalization.CultureInfo.InvariantCulture)}},
               "selectedProfileId": "mxbrown"
             }
             """);
@@ -43,8 +47,8 @@ public sealed class JsonAppSettingsStoreTests
 
         var settings = await store.LoadAsync();
 
-        Assert.Equal(0.8, settings.Volume, precision: 6);
-        Assert.Equal(0.52, settings.PointerVolume, precision: 6);
+        Assert.Equal(volume, settings.Volume, precision: 6);
+        Assert.Equal(expectedPointerVolume, settings.PointerVolume, precision: 6);
         Assert.Equal("mxbrown", settings.SelectedProfileId);
         Assert.False(settings.PlaysKeyRepeatSound);
     }
@@ -67,11 +71,43 @@ public sealed class JsonAppSettingsStoreTests
         await store.SaveAsync(source);
         var loaded = await store.LoadAsync();
 
-        Assert.Equal(1, loaded.Volume);
-        Assert.Equal(0.65, loaded.PointerVolume, precision: 6);
+        Assert.Equal(2, loaded.Volume);
+        Assert.Equal(1, loaded.PointerVolume, precision: 6);
         Assert.Equal("holypanda", loaded.SelectedProfileId);
         Assert.Equal("glass", loaded.SelectedPointerProfileId);
         Assert.Equal(AutomaticUpdateCheckPreference.Enabled, loaded.AutomaticUpdateCheckPreference);
+    }
+
+    [Theory]
+    [InlineData(1.25)]
+    [InlineData(1.5)]
+    [InlineData(2)]
+    public async Task BoostedKeyboardVolumeSurvivesReloadAndUnrelatedSettingsChanges(double volume)
+    {
+        using var directory = new TestDirectory();
+        var path = Path.Combine(directory.Path, "settings.json");
+        using (var store = new JsonAppSettingsStore(path))
+        {
+            await store.SaveAsync(new AppSettingsSnapshot { Volume = volume, PointerVolume = 0.35 });
+        }
+
+        using var reopened = new JsonAppSettingsStore(path);
+        var loaded = await reopened.LoadAsync();
+        await reopened.SaveAsync(loaded with { UsesPitchVariation = false });
+        var updated = await reopened.LoadAsync();
+
+        Assert.Equal(volume, updated.Volume);
+        Assert.Equal(0.35, updated.PointerVolume);
+        Assert.False(updated.UsesPitchVariation);
+    }
+
+    [Fact]
+    public void PointerVolumeRemainsLimitedToOneHundredPercent()
+    {
+        var normalized = new AppSettingsSnapshot { Volume = 2, PointerVolume = 2 }.Normalize();
+
+        Assert.Equal(2, normalized.Volume);
+        Assert.Equal(1, normalized.PointerVolume);
     }
 
     [Theory]

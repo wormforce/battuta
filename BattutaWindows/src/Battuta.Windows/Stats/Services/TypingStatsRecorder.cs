@@ -5,8 +5,8 @@ using Battuta.Windows.Stats.Persistence;
 namespace Battuta.Windows.Stats.Services;
 
 /// <summary>
-/// Batches the keyboard hot path in memory and serializes persistence writes.
-/// No database work is performed by <see cref="RecordKeyDown"/>.
+/// Batches the input hot path in memory and serializes persistence writes.
+/// No database work is performed by <see cref="RecordKeyDown"/> or <see cref="RecordMouseDown"/>.
 /// </summary>
 public sealed class TypingStatsRecorder : IAsyncDisposable
 {
@@ -24,6 +24,7 @@ public sealed class TypingStatsRecorder : IAsyncDisposable
     private readonly SemaphoreSlim _flushGate = new(1, 1);
     private readonly Dictionary<PendingCharacterKey, long> _pendingCharacters = [];
     private readonly Dictionary<PendingKeyPressKey, long> _pendingKeyPresses = [];
+    private readonly Dictionary<DateOnly, long> _pendingMouseClicks = [];
     private readonly TimeZoneInfo _localTimeZone;
     private readonly TimeSpan _defaultFlushDelay;
     private CancellationTokenSource? _scheduledFlushCancellation;
@@ -143,6 +144,22 @@ public sealed class TypingStatsRecorder : IAsyncDisposable
         }
     }
 
+    public void RecordMouseDown(DateTimeOffset occurredAt)
+    {
+        var local = TimeZoneInfo.ConvertTime(occurredAt, _localTimeZone);
+        var localDate = DateOnly.FromDateTime(local.DateTime);
+        lock (_sync)
+        {
+            if (_disposed || _isClearing || _isRecordingSuspended)
+            {
+                return;
+            }
+
+            _pendingMouseClicks[localDate] = _pendingMouseClicks.GetValueOrDefault(localDate) + 1;
+            ScheduleFlushLocked(_defaultFlushDelay);
+        }
+    }
+
     public async Task<bool> FlushPendingAsync(CancellationToken cancellationToken = default)
     {
         CancelScheduledFlush();
@@ -240,6 +257,7 @@ public sealed class TypingStatsRecorder : IAsyncDisposable
             {
                 _pendingCharacters.Clear();
                 _pendingKeyPresses.Clear();
+                _pendingMouseClicks.Clear();
                 _retryBatch = null;
             }
 
@@ -300,7 +318,8 @@ public sealed class TypingStatsRecorder : IAsyncDisposable
                 return retry;
             }
 
-            if (_pendingCharacters.Count == 0 && _pendingKeyPresses.Count == 0)
+            if (_pendingCharacters.Count == 0 && _pendingKeyPresses.Count == 0
+                && _pendingMouseClicks.Count == 0)
             {
                 return TypingStatsWriteBatch.Empty;
             }
@@ -323,9 +342,14 @@ public sealed class TypingStatsRecorder : IAsyncDisposable
                 .OrderBy(item => item.LocalDate)
                 .ThenBy(item => item.PhysicalKeyId.Value, StringComparer.Ordinal)
                 .ToArray();
+            var mouseClicks = _pendingMouseClicks
+                .Select(pair => new MouseClickAggregate(pair.Key, pair.Value))
+                .OrderBy(item => item.LocalDate)
+                .ToArray();
             _pendingCharacters.Clear();
             _pendingKeyPresses.Clear();
-            return new TypingStatsWriteBatch(characters, keys);
+            _pendingMouseClicks.Clear();
+            return new TypingStatsWriteBatch(characters, keys) { MouseAggregates = mouseClicks };
         }
     }
 

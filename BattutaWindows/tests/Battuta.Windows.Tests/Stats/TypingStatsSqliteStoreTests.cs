@@ -18,6 +18,121 @@ public sealed class TypingStatsSqliteStoreTests
         "ExampleTwo.exe");
 
     [Fact]
+    public async Task MouseClicksPersistAcrossDaysAndReopenWithoutChangingTypingMetrics()
+    {
+        using var fixture = TemporaryDatabase.Create();
+        var today = DateOnly.FromDateTime(Now.UtcDateTime);
+        var yesterday = today.AddDays(-1);
+        await using (var store = fixture.CreateStore(Now))
+        {
+            await store.RecordAsync(new TypingStatsWriteBatch([], [])
+            {
+                MouseAggregates = [new(yesterday, 7), new(today, 2), new(today, 0), new(today, -1)],
+            });
+            await store.RecordAsync(new TypingStatsWriteBatch([], [])
+            {
+                MouseAggregates = [new(today, 3)],
+            });
+
+            var snapshot = await store.LoadSnapshotAsync();
+            Assert.Equal(5, snapshot.TodayMouseClicks);
+            Assert.Equal(12, snapshot.AllTimeMouseClicks);
+            Assert.Equal(0, snapshot.Today.CharacterCount);
+            Assert.Equal(0, snapshot.Today.ActiveSeconds);
+            Assert.Equal(0, snapshot.Today.PeakCps);
+            Assert.Null(snapshot.LastInputAt);
+            Assert.Empty(snapshot.Apps);
+            Assert.Empty(snapshot.TodayKeyCounts);
+            Assert.Empty(snapshot.AllTimeKeyCounts);
+        }
+
+        await using var reopened = fixture.CreateStore(Now.AddDays(1));
+        var nextDay = await reopened.LoadSnapshotAsync();
+        Assert.Equal(0, nextDay.TodayMouseClicks);
+        Assert.Equal(12, nextDay.AllTimeMouseClicks);
+        await reopened.ClearAllAsync();
+        var cleared = await reopened.LoadSnapshotAsync();
+        Assert.Equal(0, cleared.TodayMouseClicks);
+        Assert.Equal(0, cleared.AllTimeMouseClicks);
+        Assert.Equal(0, await ReadScalarAsync(fixture.Path, "SELECT COUNT(*) FROM MouseDailyStat;"));
+    }
+
+    [Fact]
+    public async Task MigratesVersionOneWithoutChangingKeyboardHistory()
+    {
+        using var fixture = TemporaryDatabase.Create();
+        var today = DateOnly.FromDateTime(Now.UtcDateTime);
+        var oldDate = today.AddDays(-40);
+        await using (var original = fixture.CreateStore(Now))
+        {
+            await original.RecordAsync(new TypingStatsWriteBatch(
+                [new(Now.ToUnixTimeSeconds(), today, 12, AppOne, 3)],
+                [new(today, PhysicalKeys.KeyA, 2), new(oldDate, PhysicalKeys.KeyB, 9)]));
+        }
+
+        // Version 1 has the same keyboard tables and triggers, without mouse totals.
+        await using (var connection = new SqliteConnection($"Data Source={fixture.Path};Pooling=False"))
+        {
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = "DROP TABLE MouseDailyStat; PRAGMA user_version = 1;";
+            await command.ExecuteNonQueryAsync();
+        }
+
+        await using (var migrated = fixture.CreateStore(Now))
+        {
+            var snapshot = await migrated.LoadSnapshotAsync();
+            Assert.Equal(TypingStatsSqliteStore.SchemaVersion, await ReadPragmaAsync(fixture.Path, "user_version"));
+            Assert.Equal(3, snapshot.Today.CharacterCount);
+            Assert.Equal(3, snapshot.Today.PeakCps);
+            Assert.Equal(2, snapshot.TodayKeyCounts[PhysicalKeys.KeyA]);
+            Assert.Equal(11, snapshot.AllTimePhysicalPresses);
+            Assert.Equal("Example One", snapshot.Today.TopAppName);
+            Assert.Equal(0, snapshot.TodayMouseClicks);
+            Assert.Equal(0, snapshot.AllTimeMouseClicks);
+
+            await migrated.RecordAsync(new TypingStatsWriteBatch(
+                [new(Now.ToUnixTimeSeconds(), today, 12, AppOne, 1)],
+                [new(today, PhysicalKeys.KeyA, 1)])
+            {
+                MouseAggregates = [new(today, 5)],
+            });
+        }
+
+        await using var reopened = fixture.CreateStore(Now);
+        var persisted = await reopened.LoadSnapshotAsync();
+        Assert.Equal(4, persisted.Today.CharacterCount);
+        Assert.Equal(4, persisted.Today.PeakCps);
+        Assert.Equal(12, persisted.AllTimePhysicalPresses);
+        Assert.Equal(5, persisted.TodayMouseClicks);
+        Assert.Equal(5, persisted.AllTimeMouseClicks);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    public async Task RejectsIncompleteOrFutureSchemaWithoutStartingMigration(int version)
+    {
+        using var fixture = TemporaryDatabase.Create();
+        await using (var connection = new SqliteConnection($"Data Source={fixture.Path};Pooling=False"))
+        {
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = $"PRAGMA application_id = {TypingStatsSqliteStore.ApplicationId}; PRAGMA user_version = {version}; CREATE TABLE Preserved(Value INTEGER); INSERT INTO Preserved VALUES (7);";
+            await command.ExecuteNonQueryAsync();
+        }
+
+        await using var store = fixture.CreateStore(Now);
+        var exception = await Assert.ThrowsAsync<TypingStatsStoreException>(() => store.LoadSnapshotAsync());
+        Assert.Equal(TypingStatsStoreErrorKind.IncompatibleSchema, exception.Kind);
+        Assert.Equal(version, await ReadPragmaAsync(fixture.Path, "user_version"));
+        Assert.Equal(7, await ReadScalarAsync(fixture.Path, "SELECT Value FROM Preserved;"));
+        Assert.Equal(0, await ReadScalarAsync(
+            fixture.Path,
+            "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='MouseDailyStat';"));
+    }
+
+    [Fact]
     public async Task CreatesNativeSchemaAndLoadsEquivalentSnapshot()
     {
         var fixture = TemporaryDatabase.Create();

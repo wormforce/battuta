@@ -12,11 +12,15 @@ namespace Battuta.Windows.Tests.Ui;
 public sealed class TraySliderTemplateTests
 {
     [Theory]
-    [InlineData(0)]
-    [InlineData(44)]
-    [InlineData(100)]
+    [InlineData(0, 0)]
+    [InlineData(44, 44)]
+    [InlineData(100, 100)]
+    [InlineData(150, 75)]
+    [InlineData(200, 100)]
     [Trait(TestCategories.TraitName, TestCategories.Ui)]
-    public void KeyboardAndPointerVolumeThumbsStayCenteredVisibleAndUnclipped(double value)
+    public void KeyboardAndPointerVolumeThumbsStayCenteredVisibleAndUnclipped(
+        double keyboardVolume,
+        double pointerVolume)
     {
         StaTestHost.Run(() =>
         {
@@ -24,12 +28,12 @@ public sealed class TraySliderTemplateTests
             var content = Assert.IsAssignableFrom<FrameworkElement>(window.Content);
             Arrange(content, 360, 760);
 
-            AssertSliderGeometry(
-                Assert.IsType<Slider>(window.FindName("KeyboardVolumeSlider")),
-                value);
-            AssertSliderGeometry(
-                Assert.IsType<Slider>(window.FindName("PointerVolumeSlider")),
-                value);
+            var keyboardSlider = Assert.IsType<Slider>(window.FindName("KeyboardVolumeSlider"));
+            var pointerSlider = Assert.IsType<Slider>(window.FindName("PointerVolumeSlider"));
+            Assert.Equal(200, keyboardSlider.Maximum);
+            Assert.Equal(100, pointerSlider.Maximum);
+            AssertSliderGeometry(keyboardSlider, keyboardVolume);
+            AssertSliderGeometry(pointerSlider, pointerVolume);
         });
     }
 

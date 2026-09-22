@@ -55,9 +55,44 @@ public sealed class AppSettingsTests
             SelectedPointerProfile = "classic",
         });
 
-        Assert.Equal(1, migrated.Settings.KeyboardVolume);
+        Assert.Equal(2, migrated.Settings.KeyboardVolume);
         Assert.Equal(0, migrated.Settings.PointerVolume);
         Assert.True(migrated.RequiresWriteBack);
+    }
+
+    [Theory]
+    [InlineData(1.25)]
+    [InlineData(1.5)]
+    [InlineData(2)]
+    public void BoostedKeyboardVolumePersistsWithoutChangingPointerVolume(double volume)
+    {
+        var settings = AppSettingsDefaults.Create() with
+        {
+            KeyboardVolume = volume,
+            PointerVolume = 0.35,
+        };
+
+        var stored = AppSettingsMigration.ToStored(settings);
+        var loaded = AppSettingsMigration.Normalize(stored);
+
+        Assert.Equal(volume, loaded.Settings.KeyboardVolume);
+        Assert.Equal(0.35, loaded.Settings.PointerVolume);
+        Assert.False(loaded.RequiresWriteBack);
+    }
+
+    [Fact]
+    public void PointerVolumeCannotUseKeyboardBoostRange()
+    {
+        var settings = AppSettingsDefaults.Create() with
+        {
+            KeyboardVolume = 2,
+            PointerVolume = 2,
+        };
+
+        var loaded = AppSettingsMigration.Normalize(AppSettingsMigration.ToStored(settings));
+
+        Assert.Equal(2, loaded.Settings.KeyboardVolume);
+        Assert.Equal(1, loaded.Settings.PointerVolume);
     }
 
     [Fact]

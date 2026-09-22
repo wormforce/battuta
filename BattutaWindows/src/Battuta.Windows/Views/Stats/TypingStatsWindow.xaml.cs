@@ -37,7 +37,7 @@ public partial class TypingStatsWindow : Window, IDisposable
     private async void ClearStatsClick(object sender, RoutedEventArgs e)
     {
         var result = MessageBox.Show(this,
-            "今日、历史、应用排行和全部逐键累计都将从本机删除，且无法恢复。",
+            "今日、历史、应用排行、全部逐键累计和鼠标点击统计都将从本机删除，且无法恢复。",
             "清除全部输入统计？", MessageBoxButton.OKCancel, MessageBoxImage.Warning);
         if (result == MessageBoxResult.OK && DataContext is TypingStatsViewModel model)
         {

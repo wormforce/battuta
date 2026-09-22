@@ -72,7 +72,7 @@ public sealed class PolyphonicSampleProvider : ISampleProvider
             return false;
         }
 
-        gain = Math.Clamp(gain, 0f, 1f);
+        gain = Math.Clamp(gain, 0f, AudioConstants.MaximumVoiceGain);
         rate = Math.Clamp(
             rate,
             AudioConstants.MinimumPlaybackRate,

@@ -184,13 +184,19 @@ public sealed record TypingKeyAggregate(
     PhysicalKeyId PhysicalKeyId,
     long Count);
 
+public sealed record MouseClickAggregate(DateOnly LocalDate, long Count);
+
 public sealed record TypingStatsWriteBatch(
     IReadOnlyList<TypingCharacterAggregate> CharacterAggregates,
     IReadOnlyList<TypingKeyAggregate> KeyAggregates)
 {
+    public IReadOnlyList<MouseClickAggregate> MouseAggregates { get; init; } = [];
+
     public static TypingStatsWriteBatch Empty { get; } = new([], []);
 
-    public bool IsEmpty => CharacterAggregates.Count == 0 && KeyAggregates.Count == 0;
+    public bool IsEmpty => CharacterAggregates.Count == 0
+        && KeyAggregates.Count == 0
+        && MouseAggregates.Count == 0;
 }
 
 public sealed record TypingStatsSnapshot(
@@ -205,6 +211,10 @@ public sealed record TypingStatsSnapshot(
     IReadOnlyDictionary<PhysicalKeyId, long> TodayKeyCounts,
     IReadOnlyDictionary<PhysicalKeyId, long> AllTimeKeyCounts)
 {
+    public long TodayMouseClicks { get; init; }
+
+    public long AllTimeMouseClicks { get; init; }
+
     public long FourteenDayTotal => History.Sum(day => day.CharacterCount);
 
     public long FourteenDayAverage => History.Count == 0 ? 0 : FourteenDayTotal / History.Count;
