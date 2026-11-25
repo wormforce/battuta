@@ -1,0 +1,17 @@
+[package]
+name = "battuta-audio-prep"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+# Build-tool-only external dependencies (allowed by plan §6.2): the MP3
+# decoder for converting the canonical builtin assets and the hash crate for
+# deterministic input/output validation. Neither is linked into the runtime.
+# `battuta-audio` provides the shared cubic interpolation and constants.
+battuta-audio = { workspace = true }
+symphonia = { workspace = true, features = ["mp3", "wav"] }
+sha2 = { workspace = true }
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"

@@ -1,0 +1,70 @@
+# battuta-inputd systemd service (Linux port PR 10).
+#
+# The broker implements real authorization on every connection:
+# SO_PEERCRED → logind session check → polkit CheckAuthorization on
+# io.github.wormforce.Battuta.Input1.subscribe, plus lock-screen/sleep
+# gating via the logind D-Bus signals. The hardening set below is the
+# plan's §5.2 baseline and must still be validated on Debian, Fedora, and
+# Arch (DeviceAllow especially) before release — do not ship it untested.
+#
+# On-demand activation (plan §5.2/§9.2): the broker is started by
+# `battuta-inputd.socket` on the first client connection. Enable the socket
+# unit (`systemctl enable --now battuta-inputd.socket`), not this service;
+# the service carries no [Install] section on purpose. Under activation the
+# broker adopts the pre-bound listener at fd 3 and ignores --socket-path.
+# Started standalone (development), it binds --socket-path itself; the
+# packaged fallback then applies --socket-mode 0666 so the desktop user's
+# app can reach the socket and the polkit gate, not filesystem bits, is the
+# actual access control.
+#
+# The unit targets the system bus for logind/polkit; AF_UNIX covers that.
+
+[Unit]
+Description=Battuta input broker (physical key and pointer button events)
+Documentation=https://github.com/wormforce/battuta
+After=systemd-user-sessions.service
+
+[Service]
+Type=simple
+# The broker must be a *trusted polkit caller* to check the CLIENT's subject:
+# polkit refuses CheckAuthorization() for subjects belonging to other
+# identities unless the caller is uid 0 (or the subject itself). A dedicated
+# broker account (uid 955) therefore cannot perform the per-connection gate
+# at all ("Only trusted callers ... can use CheckAuthorization()"), so the
+# service runs as root and the polkit action — not the uid — is the access
+# control; the hardening set below constrains the process. Root also reads
+# /dev/input directly, so no supplementary input group is needed.
+User=root
+Group=root
+ExecStart=/usr/lib/battuta/bin/battuta-inputd --socket-path /run/battuta-inputd/input.sock --socket-mode 0666
+Restart=on-failure
+RestartSec=2s
+RuntimeDirectory=battuta-inputd
+RuntimeDirectoryMode=0755
+UMask=0077
+
+# Hardening (plan §5.2). Validate per distribution before shipping.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateNetwork=yes
+PrivateDevices=no
+DevicePolicy=closed
+# evdev access (PR 5):
+DeviceAllow=char-input rw
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+ProtectClock=yes
+ProtectControlGroups=yes
+ProtectHostname=yes
+ProtectKernelLogs=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources

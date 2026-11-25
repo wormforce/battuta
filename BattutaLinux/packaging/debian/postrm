@@ -1,0 +1,20 @@
+#!/bin/sh
+# battuta package post-removal (Linux port PR 10).
+set -e
+
+if [ "$1" = purge ]; then
+    # The socket enablement symlink is not managed by debhelper here.
+    rm -f /etc/systemd/system/sockets.target.wants/battuta-inputd.socket
+    if [ -d /run/systemd/system ]; then
+        systemctl daemon-reload >/dev/null 2>&1 || true
+        systemctl reset-failed battuta-inputd.service battuta-inputd.socket >/dev/null 2>&1 || true
+    fi
+    # User data (settings, statistics, sound packs under ~/.local and
+    # ~/.config) is intentionally untouched; only the broker identity is
+    # removed so no input-read capable account lingers.
+    if getent passwd battuta-input >/dev/null 2>&1; then
+        deluser --system battuta-input >/dev/null 2>&1 || userdel battuta-input || true
+    fi
+fi
+
+exit 0

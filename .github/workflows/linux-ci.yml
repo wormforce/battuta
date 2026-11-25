@@ -1,0 +1,97 @@
+name: Linux CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: linux-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_NOLOGO: 1
+      CI: true
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.400
+
+      - name: Install build and packaging dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y appstream dbus desktop-file-utils ffmpeg rpm \
+            libfontconfig1-dev libpipewire-0.3-dev libxcb1-dev libxkbcommon-dev \
+            libxkbcommon-x11-dev pipewire wireplumber
+
+      - name: Build Linux solution
+        run: dotnet build ./BattutaLinux/BattutaLinux.slnx --configuration Debug
+
+      - name: Run shared Core tests
+        run: >-
+          dotnet test ./BattutaWindows/tests/Battuta.Core.Tests/Battuta.Core.Tests.csproj
+          --configuration Debug --no-build --no-restore --no-progress
+
+      - name: Run shared Engine tests
+        run: >-
+          dotnet test ./shared/dotnet/Battuta.Engine.Tests/Battuta.Engine.Tests.csproj
+          --configuration Debug --no-build --no-restore --no-progress
+
+      - name: Run Linux platform tests
+        run: >-
+          dotnet test ./BattutaLinux/tests/Battuta.Linux.Tests/Battuta.Linux.Tests.csproj
+          --configuration Debug --no-build --no-restore --no-progress
+
+      - name: Rust formatting
+        working-directory: ./BattutaLinux/native
+        run: cargo fmt --all -- --check
+
+      - name: GPUI formatting
+        working-directory: ./BattutaLinux/gpui
+        run: cargo fmt -- --check
+
+      - name: Rust clippy
+        working-directory: ./BattutaLinux/native
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Rust tests
+        working-directory: ./BattutaLinux/native
+        run: cargo test
+
+      - name: Build release packages (deb, rpm, SBOM, checksums)
+        run: ./BattutaLinux/scripts/build-linux-package.sh --version 0.0.0-ci
+
+      - name: Validate staged metadata again
+        run: |
+          appstreamcli validate --no-net \
+            ./BattutaLinux/artifacts/work-0.0.0-ci/payload/usr/share/metainfo/io.github.wormforce.Battuta.metainfo.xml
+          desktop-file-validate \
+            ./BattutaLinux/artifacts/work-0.0.0-ci/payload/usr/share/applications/io.github.wormforce.Battuta.desktop
+          dpkg-deb --info ./BattutaLinux/artifacts/battuta_0.0.0-ci_amd64.deb | head -30
+          rpm -qip ./BattutaLinux/artifacts/battuta-0.0.0-*.x86_64.rpm
+
+      - name: Upload packaging artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: battuta-linux-packages
+          path: |
+            BattutaLinux/artifacts/*.tar.gz
+            BattutaLinux/artifacts/*.deb
+            BattutaLinux/artifacts/*.rpm
+            BattutaLinux/artifacts/*.spdx.json
+            BattutaLinux/artifacts/SHA256SUMS
+          retention-days: 7
+          if-no-files-found: error

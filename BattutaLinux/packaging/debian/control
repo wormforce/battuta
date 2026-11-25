@@ -1,0 +1,23 @@
+Package: battuta
+Version: @RELEASE_VERSION@
+Section: utils
+Priority: optional
+Architecture: amd64
+Installed-Size: @INSTALLED_SIZE_KB@
+Depends: libc6 (>= 2.31), libgcc-s1 (>= 3.0), libstdc++6 (>= 11), libfontconfig1, libxcb1, libxkbcommon0, libxkbcommon-x11-0, libvulkan1
+Recommends: systemd (>= 249), polkitd | policykit-1, pipewire, libicu70 | libicu72 | libicu74 | libicu76, shared-mime-info, desktop-file-utils, xdg-desktop-portal, fonts-noto-cjk
+Suggests: ffmpeg
+Maintainer: Battuta contributors <battuta@users.noreply.github.com>
+Homepage: https://github.com/wormforce/battuta
+Description: Keyboard and pointer sound effects with typing statistics
+ Battuta plays realistic mechanical keyboard and pointer sounds for every
+ physical keypress, entirely on the local machine, and records optional
+ typing statistics (daily trends, per-key heatmaps, per-app identity).
+ .
+ Ships the battuta-inputd system broker as an on-demand systemd socket
+ service: the broker reads /dev/input and the per-connection
+ polkit action io.github.wormforce.Battuta.Input1.subscribe authorizes the
+ desktop session, and only physical key identities cross the socket — no
+ characters, no pointer coordinates, no window contents.
+ .
+ The UI runs natively on Wayland (X11 fallback) with PipeWire audio.

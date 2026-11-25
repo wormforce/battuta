@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TestSupport\Battuta.Linux.TestSupport.csproj" />
+    <ProjectReference Include="..\..\src\Battuta.Linux\Battuta.Linux.csproj" />
+    <ProjectReference Include="..\..\src\Battuta.Linux.Platform\Battuta.Linux.Platform.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Battuta input broker polkit action (Linux port PR 5b).
+
+  The action authorizes a local client to subscribe to the broker's physical
+  keyboard and pointer button event stream. The broker (battuta-inputd) asks
+  polkit for this action on every connection with a unix-process subject
+  (pid, start-time, uid); a denied or interactive-only decision rejects the
+  connection before any handshake.
+
+  Defaults rationale:
+  - allow_active=yes: the Battuta app runs in the user's own active graphical
+    session — that is the product's entire use case, so no prompt. The
+    listener still only sees physical key identities (privacy boundary in the
+    wire contract), and the single-subscriber slot plus the broker's lock/VT
+    gating bound the exposure.
+  - allow_inactive=auth_self_keep: a session that is logged in but switched
+    away from (VT) must authenticate once per session; keep the decision so
+    routine VT switching does not re-prompt.
+  - allow_any=no: other users and remote sessions never qualify.
+
+  First-run authorization UX (surfacing denials, an interactive flow) is
+  planned for the PR 7 GUI; until then a denial simply fails the handshake
+  with `error (code = 4, unauthorized)` and a diagnostic reason.
+-->
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>Battuta</vendor>
+  <vendor_url>https://github.com/wormforce/battuta</vendor_url>
+
+  <action id="io.github.wormforce.Battuta.Input1.subscribe">
+    <description>Connect to the Battuta input broker</description>
+    <description xml:lang="zh_CN">连接 Battuta 输入 Broker</description>
+
+    <message>Connecting to Battuta's input broker exposes the physical key
+presses and mouse buttons of this session's keyboard and pointer devices.
+Battuta receives physical key identities only — no characters, no pointer
+coordinates, no window contents — but physical key sequences can still reveal
+typed text. Authorization is required to prevent other processes from
+silently listening to your typing.</message>
+    <message xml:lang="zh_CN">连接 Battuta 输入 Broker 后，应用将收到本会话键盘与鼠标设备的物理按键与按钮事件。Battuta 只接收物理键 ID——不含字符、不含指针坐标、不含窗口内容——但物理按键序列仍可能被用于推断输入内容。需要授权以防止其他进程静默监听键盘输入。</message>
+
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>auth_self_keep</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+  </action>
+</policyconfig>

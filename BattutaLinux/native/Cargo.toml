@@ -1,0 +1,21 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/battuta-input-protocol",
+    "crates/battuta-inputd",
+    "crates/battuta-audio",
+    "crates/battuta-audio-prep",
+]
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/wormforce/battuta"
+
+[workspace.dependencies]
+libc = "0.2"
+battuta-input-protocol = { path = "crates/battuta-input-protocol" }
+battuta-audio = { path = "crates/battuta-audio" }
+battuta-audio-prep = { path = "crates/battuta-audio-prep" }
+symphonia = "0.6.1"    # Pure Rust media container and audio decoding library.
+sha2 = "0.10"          # SHA-256 for deterministic build validation.

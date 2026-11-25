@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Shared-MIME database entry for Battuta sound packs (Linux port PR 10).
+     v1 packages are legacy directory bundles; the ZIP container is added by
+     the cross-platform ZIP reader work (plan §8.2) and gains an
+     application/zip subclass then. -->
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-simuboard-pack">
+    <comment>Battuta sound pack</comment>
+    <comment xml:lang="zh_CN">Battuta 音色包</comment>
+    <acronym>SimuBoard pack</acronym>
+    <expanded-acronym>SimuBoard sound pack</expanded-acronym>
+    <glob pattern="*.simuboardpack"/>
+  </mime-type>
+</mime-info>

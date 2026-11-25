@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "volume": 0.8,
+  "selectedProfileId": "mxbrown",
+  // Legacy minimal documents may omit any field; readers apply documented
+  // defaults. Comments and trailing commas are tolerated on read.
+  "playsReleaseSound": false,
+}

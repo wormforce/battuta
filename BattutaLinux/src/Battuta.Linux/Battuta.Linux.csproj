@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Battuta.Linux.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BattutaWindows\src\Battuta.Core\Battuta.Core.csproj" />
+    <ProjectReference Include="..\..\..\shared\dotnet\Battuta.Engine\Battuta.Engine.csproj" />
+    <ProjectReference Include="..\Battuta.Linux.Platform\Battuta.Linux.Platform.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Canonical audio sources: the catalog resolves resource paths here and
+         the Linux loader maps them onto the build-time PCM products, exactly
+         like the Windows app (plan §6.2). Products themselves are generated
+         by battuta-audio-prep into the build output (see scripts/). -->
+    <Content Include="..\..\..\shared\audio\builtin\**\*.*">
+      <Link>Assets\Sounds\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="..\..\..\shared\soundpacks\bundled\**\*.*">
+      <Link>BundledSoundPacks\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

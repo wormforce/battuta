@@ -1,0 +1,20 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Battuta
+Name[zh_CN]=Battuta 键音
+GenericName=Keyboard Sound Effects
+GenericName[zh_CN]=机械键盘音效
+Comment=Physical keyboard and pointer sound effects with typing statistics
+Comment[zh_CN]=物理键盘与鼠标音效，附带输入统计
+Exec=/usr/bin/battuta
+TryExec=/usr/bin/battuta
+Icon=io.github.wormforce.Battuta
+Terminal=false
+Categories=AudioVideo;Audio;
+Keywords=keyboard;sound;mechanical;typing;statistics;
+Keywords[zh_CN]=键盘;音效;机械键盘;打字;统计;
+MimeType=application/x-simuboard-pack;
+StartupNotify=true
+SingleMainWindow=true
+X-GNOME-UsesNotifications=false

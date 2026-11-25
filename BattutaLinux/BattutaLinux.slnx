@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Battuta.Linux.Platform/Battuta.Linux.Platform.csproj" />
+    <Project Path="src/Battuta.Linux/Battuta.Linux.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Battuta.Linux.Tests/Battuta.Linux.Tests.csproj" />
+  </Folder>
+  <Project Path="../BattutaWindows/src/Battuta.Core/Battuta.Core.csproj" />
+  <Project Path="../shared/dotnet/Battuta.Engine/Battuta.Engine.csproj" />
+  <Project Path="tests/TestSupport/Battuta.Linux.TestSupport.csproj" />
+  <Project Path="../BattutaWindows/tests/Battuta.Core.Tests/Battuta.Core.Tests.csproj" />
+  <Project Path="../shared/dotnet/Battuta.Engine.Tests/Battuta.Engine.Tests.csproj" />
+</Solution>

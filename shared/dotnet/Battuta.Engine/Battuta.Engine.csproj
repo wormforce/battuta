@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Battuta.Linux" />
+    <InternalsVisibleTo Include="Battuta.Engine.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\BattutaWindows\src\Battuta.Core\Battuta.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Audio/AudioConstants.cs" Link="Portable/Audio/AudioConstants.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Audio/LeadingSilenceTrimmer.cs" Link="Portable/Audio/LeadingSilenceTrimmer.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Audio/PreparedPcmSample.cs" Link="Portable/Audio/PreparedPcmSample.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Diy/Audio/DiyAudioModels.cs" Link="Portable/Diy/Audio/DiyAudioModels.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Diy/Audio/DiyTemporaryFileSafety.cs" Link="Portable/Diy/Audio/DiyTemporaryFileSafety.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Diy/Audio/Pcm16WaveFile.cs" Link="Portable/Diy/Audio/Pcm16WaveFile.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Diy/Packages/DiySoundPackArchiveService.cs" Link="Portable/Diy/Packages/DiySoundPackArchiveService.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Diy/Packages/DiySoundPackDirectoryTransaction.cs" Link="Portable/Diy/Packages/DiySoundPackDirectoryTransaction.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Diy/Packages/DiySoundPackFileSafety.cs" Link="Portable/Diy/Packages/DiySoundPackFileSafety.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Diy/Packages/DiySoundPackLibrary.cs" Link="Portable/Diy/Packages/DiySoundPackLibrary.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Diy/Packages/DiySoundPackModels.cs" Link="Portable/Diy/Packages/DiySoundPackModels.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Diy/Packages/DiySoundPackPackageValidator.cs" Link="Portable/Diy/Packages/DiySoundPackPackageValidator.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Diy/ViewModels/DiyEditorModels.cs" Link="Portable/Diy/ViewModels/DiyEditorModels.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Settings/AppSettingsSnapshot.cs" Link="Portable/Settings/AppSettingsSnapshot.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Settings/IAppSettingsStore.cs" Link="Portable/Settings/IAppSettingsStore.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Settings/SettingsAutosaveService.cs" Link="Portable/Settings/SettingsAutosaveService.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Stats/Models/TypingStatsModels.cs" Link="Portable/Stats/Models/TypingStatsModels.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Stats/Persistence/ITypingStatsPersistence.cs" Link="Portable/Stats/Persistence/ITypingStatsPersistence.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Stats/Persistence/TypingStatsSqliteStore.cs" Link="Portable/Stats/Persistence/TypingStatsSqliteStore.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Stats/Services/TypingCharacterKeyFilter.cs" Link="Portable/Stats/Services/TypingCharacterKeyFilter.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Stats/Services/TypingStatsRecorder.cs" Link="Portable/Stats/Services/TypingStatsRecorder.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Stats/ViewModels/TypingStatsViewModel.cs" Link="Portable/Stats/ViewModels/TypingStatsViewModel.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Stats/Visualization/AdaptiveHeatScale.cs" Link="Portable/Stats/Visualization/AdaptiveHeatScale.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Updates/GitHubReleaseClient.cs" Link="Portable/Updates/GitHubReleaseClient.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Updates/IReleaseClient.cs" Link="Portable/Updates/IReleaseClient.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Updates/IUpdateInstaller.cs" Link="Portable/Updates/IUpdateInstaller.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Updates/ReleaseModels.cs" Link="Portable/Updates/ReleaseModels.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Updates/SemanticVersion.cs" Link="Portable/Updates/SemanticVersion.cs" />
+    <Compile Include="../../../BattutaWindows/src/Battuta.Windows/Updates/UpdateCheckService.cs" Link="Portable/Updates/UpdateCheckService.cs" />
+  </ItemGroup>
+
+</Project>

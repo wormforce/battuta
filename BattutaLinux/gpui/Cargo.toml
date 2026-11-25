@@ -1,0 +1,15 @@
+[package]
+name = "battuta-gpui"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+async-channel = "2"
+gpui = { version = "=0.2.2", path = "vendor/gpui" }
+ksni = { version = "=0.3.7", features = ["blocking"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.dev]
+debug = 0

@@ -1,0 +1,11 @@
+#!/bin/sh
+# battuta package pre-removal (Linux port PR 10).
+set -e
+
+# Stop the broker before its binaries disappear. Upgrades pause listening
+# briefly; the app reconnects on its own.
+if [ -d /run/systemd/system ]; then
+    systemctl stop battuta-inputd.socket battuta-inputd.service >/dev/null 2>&1 || true
+fi
+
+exit 0
