@@ -92,8 +92,8 @@ public sealed class PackagingTests
         var defaults = action.Element("defaults");
         Assert.NotNull(defaults);
         Assert.Equal("no", defaults.Element("allow_any")?.Value);
-        Assert.Equal("auth_self_keep", defaults.Element("allow_inactive")?.Value);
-        Assert.Equal("yes", defaults.Element("allow_active")?.Value);
+        Assert.Equal("no", defaults.Element("allow_inactive")?.Value);
+        Assert.Equal("auth_self_keep", defaults.Element("allow_active")?.Value);
 
         // The message must keep disclosing that key sequences can reveal
         // typed text (plan §5.2 threat-model wording).

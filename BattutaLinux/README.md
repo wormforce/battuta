@@ -27,7 +27,8 @@ The package script builds an x86-64 tarball and builds a DEB or RPM when the
 corresponding native packaging tool is installed. Install the native package
 on a systemd and polkit desktop to set up the on-demand
 `battuta-inputd.socket` service and the application menu entry. A development
-build can use the socket provided by an installed package.
+build can use the socket provided by an installed package. Choose
+**Authorize** in Battuta when the broker requests access to input events.
 
 ## Input and local data
 

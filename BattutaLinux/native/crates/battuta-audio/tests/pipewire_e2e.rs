@@ -281,8 +281,11 @@ fn pipewire_stream_plays_the_sample_into_a_virtual_sink() {
     std::thread::sleep(Duration::from_millis(300));
     let captured = std::fs::read(&capture_path).unwrap_or_default();
     let frames: Vec<f32> = captured
-        .chunks_exact(4)
-        .map(|chunk| f32::from_le_bytes(chunk.try_into().unwrap()))
+        .as_chunks::<4>()
+        .0
+        .iter()
+        .copied()
+        .map(f32::from_le_bytes)
         .collect();
     let stereo: Vec<f32> = frames
         .iter()

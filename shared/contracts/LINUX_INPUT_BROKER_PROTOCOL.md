@@ -282,8 +282,9 @@ Two non-wire additions implemented in PR 7; still no frame or code change
   requests interaction; instead the **Battuta app** runs its own polkit
   `CheckAuthorization` for **its own process** (same action id, flags bit 0
   set) against the system bus and then reconnects. This turns a challenge
-  into an in-session polkit agent prompt (the dialog appears in the app's
-  session). The app maps `(is_authorized, is_challenge)` exactly like the
+  into an in-session polkit agent prompt. The packaged policy requires
+  authentication in an active local session and temporarily retains the
+  decision for the same process so the retry can succeed. The app maps `(is_authorized, is_challenge)` exactly like the
   broker: authorized → reconnect; challenge → prompt, then reconnect on
   success; denied → surface the broker's diagnostic text (this section's
   rejection reason) and offer retry. The broker keeps treating challenges

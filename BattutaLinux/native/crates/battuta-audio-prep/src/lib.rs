@@ -143,14 +143,10 @@ pub fn decode_audio_bytes(
     let mut pcm: Vec<f32> = Vec::new();
     let mut channels = 0usize;
     let mut sample_rate = 0u32;
-    loop {
-        // Symphonia 0.6 returns None at end of stream.
-        let Some(packet) = format
-            .next_packet()
-            .map_err(|error| format!("packet failed: {error}"))?
-        else {
-            break;
-        };
+    while let Some(packet) = format
+        .next_packet()
+        .map_err(|error| format!("packet failed: {error}"))?
+    {
         if packet.track_id != track_id {
             continue;
         }

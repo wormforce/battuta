@@ -8,20 +8,8 @@
   (pid, start-time, uid); a denied or interactive-only decision rejects the
   connection before any handshake.
 
-  Defaults rationale:
-  - allow_active=yes: the Battuta app runs in the user's own active graphical
-    session — that is the product's entire use case, so no prompt. The
-    listener still only sees physical key identities (privacy boundary in the
-    wire contract), and the single-subscriber slot plus the broker's lock/VT
-    gating bound the exposure.
-  - allow_inactive=auth_self_keep: a session that is logged in but switched
-    away from (VT) must authenticate once per session; keep the decision so
-    routine VT switching does not re-prompt.
-  - allow_any=no: other users and remote sessions never qualify.
-
-  First-run authorization UX (surfacing denials, an interactive flow) is
-  planned for the PR 7 GUI; until then a denial simply fails the handshake
-  with `error (code = 4, unauthorized)` and a diagnostic reason.
+  An active local client must authenticate. The temporary decision lets
+  the same process reconnect after the GUI authorization prompt.
 -->
 <!DOCTYPE policyconfig PUBLIC
  "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
@@ -44,8 +32,8 @@ silently listening to your typing.</message>
 
     <defaults>
       <allow_any>no</allow_any>
-      <allow_inactive>auth_self_keep</allow_inactive>
-      <allow_active>yes</allow_active>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_self_keep</allow_active>
     </defaults>
   </action>
 </policyconfig>
