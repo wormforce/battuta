@@ -1,0 +1,34 @@
+#!/bin/sh
+# battuta package post-installation (Linux port PR 10).
+set -e
+
+# The broker user: prefer systemd-sysusers (authoritative for the shipped
+# sysusers.d entry), fall back to adduser on systems that do not run it for
+# third-party packages.
+if command -v systemd-sysusers >/dev/null 2>&1; then
+    systemd-sysusers /usr/lib/sysusers.d/battuta-inputd.conf || true
+elif ! getent passwd battuta-input >/dev/null 2>&1; then
+    adduser --system --group --no-create-home --home /nonexistent \
+        --gecos "Battuta input broker" battuta-input || true
+fi
+
+# The broker is on demand: the socket unit carries the enablement. Never
+# fail the package install over a headless or non-systemd environment.
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload >/dev/null 2>&1 || true
+    systemctl enable --now battuta-inputd.socket >/dev/null 2>&1 || true
+fi
+
+# Notify caches so the desktop entry, icons, and the .simuboardpack MIME
+# type are live immediately.
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database -q /usr/share/applications || true
+fi
+if command -v update-mime-database >/dev/null 2>&1; then
+    update-mime-database /usr/share/mime >/dev/null 2>&1 || true
+fi
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -qf /usr/share/icons/hicolor >/dev/null 2>&1 || true
+fi
+
+exit 0

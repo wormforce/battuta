@@ -1,0 +1,23 @@
+[package]
+name = "battuta-input-protocol-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+battuta-input-protocol = { path = ".." }
+
+[[bin]]
+name = "decode_frame"
+path = "fuzz_targets/decode_frame.rs"
+test = false
+doc = false
+bench = false
+
+# This crate is a separate workspace so nightly-only dependencies never leak
+# into `cargo test` runs of the stable workspace.
+[workspace]

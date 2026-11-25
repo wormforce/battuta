@@ -33,6 +33,14 @@ Their copyright and permission notices are included in the corresponding NuGet
 packages. Battuta redistributes these libraries under their MIT terms and does
 not remove their notices.
 
+## GPUI on Linux
+
+Battuta's Linux client uses a modified copy of
+[GPUI 0.2.2](https://crates.io/crates/gpui/0.2.2) from Zed Industries under
+Apache-2.0. Linux releases include the license as `GPUI-LICENSE-APACHE`.
+The source and local changes are documented in
+[`BattutaLinux/gpui/vendor/gpui/BATTUTA.md`](BattutaLinux/gpui/vendor/gpui/BATTUTA.md).
+
 ## MIT-licensed recordings
 
 The following bundled recordings are redistributed under the MIT License:

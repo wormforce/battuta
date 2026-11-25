@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "isEnabled": true,
+  "selectedProfileId": "mxbrown",
+  "volume": 0.8,
+  "playsReleaseSound": false,
+  "usesPitchVariation": false,
+  "isPointerSoundEnabled": true,
+  "selectedPointerProfileId": "crisp",
+  "pointerVolume": 0.52,
+  "playsPointerReleaseSound": false,
+  "isTypingStatsEnabled": true,
+  "isLaunchAtLoginEnabled": false,
+  "automaticUpdateCheckPreference": "enabled",
+  "futureExtensionPoint": { "enabled": true },
+  "volumeUnit": "percent"
+}

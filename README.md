@@ -1,11 +1,13 @@
 # Battuta 轴体音效
 
-Battuta（原 SimuBoard）目前包含三个版本：
+Battuta（原 SimuBoard）目前包含以下版本：
 
 - 原生 macOS 菜单栏应用：在任意应用中打字都能播放声音。
 - Chrome / Edge Manifest V3 插件：只在普通网页中播放声音。
 - 原生 Windows 通知区域应用：WPF 界面、系统级键鼠监听、WASAPI 音频、
   本地统计和 DIY 音色，源码位于 [`BattutaWindows`](BattutaWindows/README.md)。
+
+- Linux 桌面应用，优先支持原生 Wayland。构建和使用说明见 [BattutaLinux](BattutaLinux/README.md)。
 
 ## Windows 系统级版本
 
@@ -15,7 +17,7 @@ Windows 版使用 .NET 10 + WPF，视觉结构以 macOS SwiftUI 版本为基线�
 复用 21 种键盘音色、5 种点击音色和 265 段录音（237 段基础资源，加上
 BCP (Suit80) 内置音色包的 28 段录音）。
 
-两端共用的内置音频、只读内置音色包、品牌母版、许可来源和音色包格式分别位于
+桌面版共用的内置音频、只读内置音色包、品牌母版、许可来源和音色包格式分别位于
 [`shared/audio`](shared/audio)、[`shared/soundpacks`](shared/soundpacks)、
 [`shared/brand`](shared/brand)、[`shared/licenses`](shared/licenses) 与
 [`shared/contracts`](shared/contracts)。

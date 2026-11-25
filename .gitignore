@@ -19,3 +19,12 @@ BattutaWindows/store-assets/raw/
 # not in the source tree.
 *.dmg
 SimuBoardMac/build/
+
+# Linux development output
+BattutaLinux/**/bin/
+BattutaLinux/**/obj/
+BattutaLinux/**/TestResults/
+BattutaLinux/artifacts/
+shared/dotnet/**/bin/
+shared/dotnet/**/obj/
+shared/dotnet/**/TestResults/

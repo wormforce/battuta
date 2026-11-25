@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Battuta AppStream metadata (Linux port PR 10). The <releases> block is
+     rewritten by BattutaLinux/scripts/build-linux-package.sh with the
+     version being packaged; the placeholder below must never ship. -->
+<component type="desktop-application">
+  <id>io.github.wormforce.Battuta</id>
+  <launchable type="desktop-id">io.github.wormforce.Battuta.desktop</launchable>
+
+  <name>Battuta</name>
+  <summary>Keyboard and pointer sound effects</summary>
+  <summary xml:lang="zh_CN">机械键盘音效</summary>
+
+  <name xml:lang="zh_CN">Battuta 键音</name>
+
+  <description>
+    <p>
+      Battuta plays realistic mechanical keyboard and pointer sounds for
+      every physical keypress, entirely on the local machine.
+    </p>
+    <p xml:lang="zh_CN">
+      Battuta 为每一次物理按键与鼠标点击播放真实的机械键盘音效，全部处理都在本机完成。
+    </p>
+    <ul>
+      <li>21 keyboard sound profiles and 5 pointer profiles (265 recordings)</li>
+      <li>Per-key mapping, DIY sound packs, and automatic key-split analysis</li>
+      <li>Typing statistics: daily trends, per-key heatmaps, and per-app identity</li>
+      <li>Native Wayland with a least-privilege system input broker; no root UI</li>
+      <li xml:lang="zh_CN">21 种键盘音色与 5 种指针音色（共 265 段录音）</li>
+      <li xml:lang="zh_CN">逐键映射、DIY 音色包与自动拆音</li>
+      <li xml:lang="zh_CN">输入统计：每日趋势、逐键热力图与应用维度</li>
+      <li xml:lang="zh_CN">原生 Wayland，配合最小权限的系统输入 Broker；界面不以 root 运行</li>
+    </ul>
+  </description>
+
+  <categories>
+    <category>Utility</category>
+    <category>AudioVideo</category>
+    <category>Audio</category>
+  </categories>
+
+  <url type="homepage">https://github.com/wormforce/battuta</url>
+  <url type="bugtracker">https://github.com/wormforce/battuta/issues</url>
+
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+
+  <recommends>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <display_length compare="ge">1000</display_length>
+  </recommends>
+  <requires>
+    <display_length compare="ge">600</display_length>
+  </requires>
+
+  <content_rating type="oars-1.1" />
+
+  <provides>
+    <binary>battuta</binary>
+    <binary>battuta-inputd</binary>
+  </provides>
+
+  <releases>
+    <!-- Rewritten by scripts/build-linux-package.sh with the packaged
+         version and date; the placeholder below is only for tooling. -->
+    <release version="@RELEASE_VERSION@" date="1970-01-01" />
+  </releases>
+
+  <custom>
+    <value key="Battuta::InputBroker">battuta-inputd</value>
+    <value key="Battuta::PrivacyNote">All audio and statistics stay on the device; the input broker only forwards physical key identities.</value>
+  </custom>
+</component>

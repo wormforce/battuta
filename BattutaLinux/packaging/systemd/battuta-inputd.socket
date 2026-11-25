@@ -1,0 +1,29 @@
+# battuta-inputd socket unit (Linux port PR 10).
+#
+# The broker is an on-demand system service (plan §5.2/§9.2): systemd owns
+# the listening node and starts battuta-inputd.service on the first client
+# connection. The broker reads SEQPACKET sockets only, so the listener must
+# be ListenSequentialPacket= — a plain ListenStream= unit is rejected by the
+# broker at startup (it validates the socket type before adopting fd 3).
+#
+# Permission model: the node is 0666 so the desktop user's app can connect;
+# the broker's per-connection SO_PEERCRED → logind → polkit gate, not
+# filesystem bits, is the actual access control (see the service unit and
+# the polkit action). Tighten with SocketGroup= plus a dedicated group only
+# if a deployment wants the filesystem layer back.
+
+[Unit]
+Description=Battuta input broker socket (activates battuta-inputd on demand)
+Documentation=https://github.com/wormforce/battuta
+
+[Socket]
+ListenSequentialPacket=/run/battuta-inputd/input.sock
+SocketMode=0666
+RemoveOnStop=true
+# The directory must exist before the node is created; the service unit
+# declares it too for standalone (dev) starts.
+RuntimeDirectory=battuta-inputd
+RuntimeDirectoryMode=0755
+
+[Install]
+WantedBy=sockets.target
