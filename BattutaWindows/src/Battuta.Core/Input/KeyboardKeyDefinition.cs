@@ -21,6 +21,7 @@ public enum KeyboardLayoutMembership
     Compact,
     Extended,
     PlatformOnly,
+    InputMethod,
 }
 
 public sealed record KeyboardKeyDefinition(

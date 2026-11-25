@@ -18,19 +18,21 @@ public sealed record WindowsKeyDisplayDefinition(
 /// <summary>Windows terminology layered over the platform-neutral key catalog.</summary>
 public static class WindowsKeyDisplayCatalog
 {
-    private static readonly Dictionary<PhysicalKeyId, WindowsKeyDisplayDefinition> ById =
-        PhysicalKeyCatalog.All.ToDictionary(
-            key => key.Id,
-            key => new WindowsKeyDisplayDefinition(
-                key.Id,
-                LabelForKnownKey(key.Id),
-                key.Row,
-                key.SpecialKey,
-                key.LegacySoundPackV1Id is not null,
-                key.Id != PhysicalKeys.Fn));
+    private static readonly WindowsKeyDisplayDefinition[] Definitions = PhysicalKeyCatalog.All
+        .Where(key => key.Membership != KeyboardLayoutMembership.InputMethod)
+        .Select(key => new WindowsKeyDisplayDefinition(
+            key.Id,
+            LabelForKnownKey(key.Id),
+            key.Row,
+            key.SpecialKey,
+            key.LegacySoundPackV1Id is not null,
+            key.Id != PhysicalKeys.Fn))
+        .ToArray();
 
-    public static IReadOnlyList<WindowsKeyDisplayDefinition> All { get; } =
-        PhysicalKeyCatalog.All.Select(key => ById[key.Id]).ToArray();
+    private static readonly Dictionary<PhysicalKeyId, WindowsKeyDisplayDefinition> ById =
+        Definitions.ToDictionary(key => key.Id);
+
+    public static IReadOnlyList<WindowsKeyDisplayDefinition> All => Definitions;
 
     public static bool TryGet(
         PhysicalKeyId id,

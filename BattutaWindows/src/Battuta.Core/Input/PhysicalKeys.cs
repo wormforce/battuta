@@ -135,6 +135,9 @@ public static class PhysicalKeys
     public static readonly PhysicalKeyId IntlRo = Id("IntlRo");
     public static readonly PhysicalKeyId Eisu = Id("Eisu");
     public static readonly PhysicalKeyId Kana = Id("Kana");
+    public static readonly PhysicalKeyId ZenkakuHankaku = Id("ZenkakuHankaku");
+    public static readonly PhysicalKeyId Henkan = Id("Henkan");
+    public static readonly PhysicalKeyId Muhenkan = Id("Muhenkan");
 
     public static readonly PhysicalKeyId AudioVolumeUp = Id("AudioVolumeUp");
     public static readonly PhysicalKeyId AudioVolumeDown = Id("AudioVolumeDown");

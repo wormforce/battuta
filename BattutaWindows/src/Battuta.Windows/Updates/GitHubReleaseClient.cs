@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 
 namespace Battuta.Windows.Updates;
@@ -13,11 +14,24 @@ public sealed class GitHubReleaseClient : IReleaseClient
 
     private readonly HttpClient _httpClient;
     private readonly TimeProvider _timeProvider;
+    private readonly string _userAgent;
+    private readonly Func<string, bool> _matchesReleaseAsset;
 
     public GitHubReleaseClient(HttpClient httpClient, TimeProvider? timeProvider = null)
+        : this(httpClient, "Battuta-Windows/1.0", MatchesWindowsAsset, timeProvider)
+    {
+    }
+
+    public GitHubReleaseClient(
+        HttpClient httpClient,
+        string userAgent,
+        Func<string, bool> matchesReleaseAsset,
+        TimeProvider? timeProvider = null)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _timeProvider = timeProvider ?? TimeProvider.System;
+        _userAgent = userAgent;
+        _matchesReleaseAsset = matchesReleaseAsset ?? throw new ArgumentNullException(nameof(matchesReleaseAsset));
     }
 
     public async Task<ReleaseFetchResult> FetchLatestAsync(
@@ -27,7 +41,7 @@ public sealed class GitHubReleaseClient : IReleaseClient
         using var request = new HttpRequestMessage(HttpMethod.Get, ReleasesEndpoint);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         request.Headers.TryAddWithoutValidation("X-GitHub-Api-Version", "2026-03-10");
-        request.Headers.UserAgent.ParseAdd("Battuta-Windows/1.0");
+        request.Headers.UserAgent.ParseAdd(_userAgent);
         if (!string.IsNullOrWhiteSpace(etag))
         {
             request.Headers.TryAddWithoutValidation("If-None-Match", etag);
@@ -94,7 +108,7 @@ public sealed class GitHubReleaseClient : IReleaseClient
                     "GitHub returned a malformed Battuta release.");
             }
 
-            var payload = payloads.FirstOrDefault(IsCompatibleWindowsRelease);
+            var payload = payloads.FirstOrDefault(IsCompatibleRelease);
             if (payload is null)
             {
                 throw new ReleaseClientException(
@@ -133,7 +147,7 @@ public sealed class GitHubReleaseClient : IReleaseClient
         }
     }
 
-    private static bool IsCompatibleWindowsRelease(GitHubReleasePayload payload)
+    private bool IsCompatibleRelease(GitHubReleasePayload payload)
     {
         if (payload.Draft
             || payload.Prerelease
@@ -143,14 +157,18 @@ public sealed class GitHubReleaseClient : IReleaseClient
             return false;
         }
 
+        return payload.Assets.Any(asset =>
+            asset.Name is { } name && _matchesReleaseAsset(name));
+    }
+
+    private static bool MatchesWindowsAsset(string name)
+    {
         var architecture = RuntimeInformation.ProcessArchitecture == Architecture.Arm64
             ? "arm64"
             : "x64";
         var suffix = $"-win-{architecture}.zip";
-        return payload.Assets.Any(asset =>
-            asset.Name is { } name
-            && name.StartsWith("Battuta-Windows-", StringComparison.OrdinalIgnoreCase)
-            && name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
+        return name.StartsWith("Battuta-Windows-", StringComparison.OrdinalIgnoreCase)
+            && name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase);
     }
 
     private static GitHubRateLimit ReadRateLimit(HttpResponseMessage response)

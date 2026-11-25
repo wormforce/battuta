@@ -167,6 +167,17 @@ public static class PhysicalKeyCatalog
             (PhysicalKeys.Eisu, "英数", "extended.jisEisu", null, 1d),
             (PhysicalKeys.Kana, "かな", "extended.jisKana", null, 1d),
         ]);
+        foreach (var (id, label, legacyId) in new[]
+        {
+            (PhysicalKeys.ZenkakuHankaku, "半角/全角", "extended.jisZenkakuHankaku"),
+            (PhysicalKeys.Henkan, "変換", "extended.jisHenkan"),
+            (PhysicalKeys.Muhenkan, "無変換", "extended.jisMuhenkan"),
+        })
+        {
+            keys.Add(new KeyboardKeyDefinition(
+                id, label, KeyboardRowId.R4, null, 1d, legacyId,
+                KeyboardLayoutMembership.InputMethod, "international"));
+        }
         AddExtended(keys, "media", [
             (PhysicalKeys.AudioVolumeUp, "音量+", "extended.volumeUp", null, 1.5),
             (PhysicalKeys.AudioVolumeDown, "音量−", "extended.volumeDown", null, 1.5),
